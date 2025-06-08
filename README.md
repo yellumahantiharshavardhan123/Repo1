@@ -8,7 +8,8 @@
 ## ✨ Features
 
 - Chat UI with formal/informal tone switcher 🤖  
-- Star-based status update system ⭐  
+- Star-based status update system ⭐
+- advertisements in middle of status
 - Light/Dark mode toggle 🌗  
 - Optional message encryption 🔐  
 - Mobile-first responsive design 📱

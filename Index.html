@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>E-mesg</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background-color: #f1f1f1;
+      color: #333;
+      text-align: center;
+      padding: 40px 20px;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .dark {
+      background-color: #121212;
+      color: #f5f5f5;
+    }
+    #toggleTheme {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 24px;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+    .logo {
+      width: 80px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: 2em;
+    }
+    p {
+      font-size: 1.1em;
+      margin-bottom: 30px;
+    }
+    .btn-group button {
+      display: block;
+      width: 80%;
+      margin: 10px auto;
+      padding: 12px;
+      font-size: 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <button id="toggleTheme">🌙</button>
+
+  <img src="https://img.icons8.com/color/96/chat--v1.png" class="logo" alt="E-mesg Logo">
+  <h1>Welcome to <strong>E-mesg</strong> 💬</h1>
+  <p>Your smart and stylish messaging experience!</p>
+
+  <div class="btn-group">
+    <button onclick="alert('Chat feature coming soon!')">💬 Chat</button>
+    <button onclick="alert('Status updates are on the way!')">⭐ Status</button>
+    <button onclick="alert('About E-mesg... A mobile-first innovation!')">ℹ️ About</button>
+  </div>
+
+  <script>
+    const btn = document.getElementById("toggleTheme");
+    btn.onclick = () => {
+      document.body.classList.toggle("dark");
+      btn.textContent = document.body.classList.contains("dark") ? "☀️" : "🌙";
+    };
+  </script>
+</body>
+</html>

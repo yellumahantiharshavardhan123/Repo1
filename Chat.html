@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>E-mesg</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+    body { background: #ece5dd; transition: background 0.3s, color 0.3s; }
+    .dark body { background: #121212; color: #fff; }
+
+    .app {
+      width: 100%; max-width: 450px; margin: auto;
+      border: 1px solid #ccc; background: white; height: 100vh;
+      display: flex; flex-direction: column;
+    }
+    .dark .app { background: #1e1e1e; color: #fff; }
+
+    .top-bar {
+      background: #075e54; color: white; padding: 10px 16px;
+      display: flex; justify-content: space-between; align-items: center;
+      position: relative;
+    }
+
+    .top-bar h1 { font-size: 20px; }
+
+    .dark-toggle {
+      font-size: 18px;
+      background: transparent;
+      border: none;
+      color: white;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+
+    .menu-btn { cursor: pointer; font-size: 20px; }
+
+    .menu-dropdown {
+      position: absolute; right: 20px; top: 50px;
+      background: white; border: 1px solid #ccc; display: none;
+      flex-direction: column; z-index: 99;
+    }
+    .dark .menu-dropdown { background: #2b2b2b; color: white; }
+
+    .menu-dropdown button {
+      padding: 10px; border: none; background: inherit; text-align: left;
+      width: 150px; cursor: pointer;
+    }
+
+    .tabs { display: flex; background: #128c7e; color: white; }
+    .tab {
+      flex: 1; text-align: center; padding: 10px; cursor: pointer;
+    }
+    .active-tab { background: #075e54; }
+
+    .content { flex: 1; overflow-y: auto; background: #f0f0f0; padding: 10px; }
+    .dark .content { background: #2b2b2b; }
+
+    .chat, .status { display: none; }
+    .chat.active, .status.active { display: block; }
+
+    .contact {
+      background: white; padding: 10px; margin-bottom: 8px;
+      border-radius: 5px; display: flex; align-items: center; cursor: pointer;
+    }
+    .dark .contact { background: #3a3a3a; }
+
+    .contact img { width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; }
+
+    .chat-box {
+      background: #dcf8c6; padding: 10px; border-radius: 8px; margin: 5px 0;
+      width: fit-content; max-width: 70%;
+    }
+    .sent { align-self: flex-end; background: #cef; }
+    .dark .chat-box { background: #444; color: white; }
+    .dark .sent { background: #555; }
+
+    .msg-input {
+      display: flex; margin-top: auto; padding: 10px; background: #f5f5f5;
+      align-items: center;
+    }
+    .dark .msg-input { background: #333; }
+
+    .msg-input input {
+      flex: 1; padding: 10px; border-radius: 20px;
+      border: 1px solid #ccc; background: white;
+    }
+    .dark .msg-input input {
+      background: #222; color: white; border-color: #555;
+    }
+
+    .msg-input button, .msg-input .tone-switch {
+      margin-left: 8px; background: none; border: none;
+      font-size: 20px; cursor: pointer;
+    }
+
+    .status-viewer {
+      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85); color: white; justify-content: center;
+      align-items: center; flex-direction: column; z-index: 999;
+    }
+
+    .status-controls {
+      margin-top: 20px; display: flex; gap: 20px;
+    }
+
+    .sort-dialog {
+      position: absolute; top: 100px; right: 20px;
+      background: white; border: 1px solid #ccc;
+      padding: 10px; display: none; z-index: 10;
+    }
+
+    .status-ad { font-style: italic; margin-top: 10px; color: yellow; }
+  </style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="top-bar">
+    <h1>E-mesg</h1>
+    <button class="dark-toggle" onclick="toggleDark()" id="darkModeBtn">🌙</button>
+    <div class="menu-btn" onclick="toggleMenu()">⋮</div>
+    <div class="menu-dropdown" id="menuDropdown">
+      <button>New Group</button>
+      <button>New Broadcast</button>
+      <button>Linked Devices</button>
+      <button onclick="toggleSortDialog()">Sort</button>
+      <button onclick="toggleDark()">Toggle Dark Mode</button>
+      <button>Settings</button>
+    </div>
+    <div class="sort-dialog" id="sortDialog">
+      <input type="text" placeholder="Search by date/month/year">
+      <button onclick="toggleSortDialog()">Close</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active-tab" onclick="switchTab('chat')">Chats</div>
+    <div class="tab" onclick="switchTab('status')">Status</div>
+    <div class="tab">Groups</div>
+    <div class="tab">Calls</div>
+  </div>
+
+  <div class="content">
+    <div class="chat active" id="chatTab">
+      <div id="chatList"></div>
+      <div id="chatWindow" style="display:none;">
+        <div style="display:flex; align-items:center; padding:10px; background:#075e54; color:white;">
+          <button onclick="goBack()" style="font-size:16px; margin-right:10px;">🔙</button>
+          <h3 id="chatTitle" style="margin:0;"></h3>
+        </div>
+        <div id="chatMessages" style="padding:10px; display:flex; flex-direction:column;"></div>
+      </div>
+    </div>
+
+    <div class="status" id="statusTab">
+      <div id="statusList"></div>
+    </div>
+  </div>
+
+  <div class="msg-input" id="chatInput" style="display:none;">
+    <input type="text" id="msgBox" placeholder="Type a message" />
+    <button onclick="sendMessage()">➤</button>
+    <button onclick="toggleEncryption()" title="Toggle Encryption">🔒</button>
+    <div class="tone-switch" onclick="toggleTone()" title="Toggle Tone">🤖</div>
+  </div>
+</div>
+
+<div class="status-viewer" id="statusViewer">
+  <div id="statusContent">Viewing Status...</div>
+  <div class="status-ad" id="statusAd" style="display: none;">Ad: Boost your mood with ChaiBot!</div>
+  <div class="status-controls">
+    <button onclick="nextStatus()">Next</button>
+    <button onclick="reactStatus()">⭐</button>
+    <button onclick="replyStatus()">Reply</button>
+    <button onclick="closeStatus()">X</button>
+  </div>
+</div>
+
+<script>
+  const contacts = ["Radha mam 😊", "Likith sir 💫", "Nikhil ❤️‍🔥", "Mom ❤️", "Dad 🔥"];
+  const statuses = ["Radha's Temple Visit 🙏", "Likith's Office Setup 🖥️", "AD: Buy 1 Get 1 Free!", "Mom's Recipe 🍲", "Dad's Workout 🏋️"];
+  let currentStatus = 0, statusInterval;
+  let toneFormal = false, encryptionOn = true, chatMessages = [];
+  const shift = 3;
+
+  function populateContacts() {
+    const list = document.getElementById("chatList");
+    const statusList = document.getElementById("statusList");
+    list.innerHTML = statusList.innerHTML = "";
+    contacts.forEach((name, i) => {
+      list.innerHTML += `<div class="contact" onclick="openChat('${name}')">
+        <img src="https://i.pravatar.cc/40?img=${i+1}">${name}</div>`;
+      statusList.innerHTML += `<div class="contact" onclick="viewStatus(${i})">
+        <img src="https://i.pravatar.cc/40?img=${i+1}">${name}'s Status</div>`;
+    });
+  }
+
+  function toggleMenu() {
+    const menu = document.getElementById("menuDropdown");
+    menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+  }
+
+  function toggleSortDialog() {
+    const dialog = document.getElementById("sortDialog");
+    dialog.style.display = dialog.style.display === "block" ? "none" : "block";
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active-tab'));
+    document.querySelectorAll('.chat, .status').forEach(el => el.classList.remove('active'));
+    if (tab === "chat") {
+      document.querySelector('.tab:nth-child(1)').classList.add('active-tab');
+      document.getElementById('chatTab').classList.add('active');
+    } else if (tab === "status") {
+      document.querySelector('.tab:nth-child(2)').classList.add('active-tab');
+      document.getElementById('statusTab').classList.add('active');
+    }
+  }
+
+  function openChat(name) {
+    document.getElementById("chatList").style.display = "none";
+    document.getElementById("chatWindow").style.display = "block";
+    document.getElementById("chatInput").style.display = "flex";
+    document.getElementById("chatTitle").innerText = name;
+    updateChatMessages();
+  }
+
+  function goBack() {
+    document.getElementById("chatList").style.display = "block";
+    document.getElementById("chatWindow").style.display = "none";
+    document.getElementById("chatInput").style.display = "none";
+  }
+
+  function encryptCaesar(text, shift) {
+    return text.split('').map(char => {
+      const code = char.charCodeAt(0);
+      if (code >= 65 && code <= 90)
+        return String.fromCharCode(((code - 65 + shift) % 26) + 65);
+      else if (code >= 97 && code <= 122)
+        return String.fromCharCode(((code - 97 + shift) % 26) + 97);
+      return char;
+    }).join('');
+  }
+
+  function decryptCaesar(text, shift) {
+    return text.split('').map(char => {
+      const code = char.charCodeAt(0);
+      if (code >= 65 && code <= 90)
+        return String.fromCharCode(((code - 65 - shift + 26) % 26) + 65);
+      else if (code >= 97 && code <= 122)
+        return String.fromCharCode(((code - 97 - shift + 26) % 26) + 97);
+      return char;
+    }).join('');
+  }
+
+  function sendMessage() {
+    const input = document.getElementById("msgBox");
+    if (!input.value.trim()) return;
+
+    let messageText = input.value;
+    if (toneFormal) messageText = "[Formal] " + messageText;
+    if (encryptionOn) messageText = encryptCaesar(messageText, shift);
+
+    chatMessages.push({ text: messageText, sent: true });
+    input.value = '';
+    updateChatMessages();
+  }
+
+  function updateChatMessages() {
+    const msgBox = document.getElementById("chatMessages");
+    msgBox.innerHTML = chatMessages.map(msg => {
+      let displayText = msg.text;
+      if (encryptionOn) displayText = decryptCaesar(displayText, shift);
+      return `<div class="chat-box ${msg.sent ? 'sent' : ''}">${displayText}</div>`;
+    }).join('');
+  }
+
+  function toggleTone() {
+    toneFormal = !toneFormal;
+    alert("Tone set to " + (toneFormal ? "Formal" : "Informal"));
+  }
+
+  function toggleEncryption() {
+    encryptionOn = !encryptionOn;
+    alert("Encryption is now " + (encryptionOn ? "ON" : "OFF"));
+    updateChatMessages();
+  }
+
+  function viewStatus(index) {
+    currentStatus = index % statuses.length;
+    document.getElementById("statusViewer").style.display = "flex";
+    updateStatus();
+    clearInterval(statusInterval);
+    statusInterval = setInterval(nextStatus, 10000);
+  }
+
+  function updateStatus() {
+    const text = statuses[currentStatus];
+    document.getElementById("statusContent").innerText = text;
+    document.getElementById("statusAd").style.display = text.startsWith("AD:") ? "block" : "none";
+  }
+
+  function nextStatus() {
+    currentStatus = (currentStatus + 1) % statuses.length;
+    updateStatus();
+  }
+
+  function reactStatus() { alert("You reacted ⭐ to this status."); }
+  function replyStatus() { alert("Reply feature coming soon!"); }
+  function closeStatus() {
+    clearInterval(statusInterval);
+    document.getElementById("statusViewer").style.display = "none";
+  }
+
+  function toggleDark() {
+    const isDark = document.body.classList.toggle("dark");
+    document.querySelector(".app").classList.toggle("dark");
+
+    const icon = document.getElementById("darkModeBtn");
+    icon.textContent = isDark ? "☀️" : "🌙";
+  }
+
+  window.onload = populateContacts;
+</script>
+</body>
+</html>

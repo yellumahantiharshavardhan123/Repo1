@@ -590,4 +590,124 @@
   function setEncryptionPasscode() {
       const passcode = document.getElementById('passcodeBox').value;
       if (passcode.length < 3) {
-          alert("Passcode should be at least 3 characters for th
+          alert("Passcode should be at least 3 characters for this demo.");
+          return;
+      }
+      encryptionPasscode = passcode;
+      encryptionOn = !encryptionOn;
+      alert("Encryption is now " + (encryptionOn ? "ON" : "OFF") + " with your passcode.");
+      closeEncryptionPasscodeModal();
+      updateChatMessages();
+  }
+
+  function startMeet() {
+      alert("Simulating: Starting a video meeting for E-mesg. (Full feature requires WebRTC)");
+  }
+
+  function startAudioCall() {
+      alert("Simulating: Starting an audio call for E-mesg. (Full feature requires WebRTC)");
+  }
+
+  function showScheduleModal() {
+      document.getElementById('scheduleMessageModal').style.display = 'flex';
+      document.getElementById('scheduledMessageBox').value = '';
+      const now = new Date();
+      now.setMinutes(now.getMinutes() + 5);
+      const isoDateTime = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+      document.getElementById('scheduledTimeBox').value = isoDateTime;
+  }
+
+  function closeScheduleModal() {
+      document.getElementById('scheduleMessageModal').style.display = 'none';
+  }
+
+  function confirmScheduleMessage() {
+      const scheduledMessage = document.getElementById('scheduledMessageBox').value;
+      const scheduledTime = new Date(document.getElementById('scheduledTimeBox').value);
+
+      if (!scheduledMessage.trim() || isNaN(scheduledTime.getTime())) {
+          alert("Please enter a message and a valid time.");
+          return;
+      }
+      if (scheduledTime <= new Date()) {
+          alert("Scheduled time must be in the future.");
+          return;
+      }
+
+      alert(`Message "${scheduledMessage}" scheduled for ${scheduledTime.toLocaleString()}. (This is a simulation.)`);
+      closeScheduleModal();
+
+      const delay = scheduledTime.getTime() - new Date().getTime();
+      if (delay > 0) {
+          setTimeout(() => {
+              if (currentChatContact) {
+                  contactsData[currentChatContact].messages.push({
+                      type: 'scheduled',
+                      content: scheduledMessage,
+                      sent: true,
+                      encrypted: false,
+                      scheduledTime: scheduledTime.toISOString()
+                  });
+                  updateChatMessages();
+                  scrollToBottom("chatMessages");
+                  simulateIncomingMessage(`Confirmation: Your scheduled message "${scheduledMessage}" was sent.`);
+              }
+          }, delay);
+      }
+  }
+
+
+  function viewStatus(index) {
+    currentStatus = index % statuses.length;
+    document.getElementById("statusViewer").style.display = "flex";
+    updateStatus();
+    clearInterval(statusInterval);
+    statusInterval = setInterval(nextStatus, 10000);
+  }
+
+  function updateStatus() {
+    const text = statuses[currentStatus];
+    document.getElementById("statusContent").innerText = text;
+    document.getElementById("statusAd").style.display = text.startsWith("AD:") ? "block" : "none";
+  }
+
+  function nextStatus() {
+    currentStatus = (currentStatus + 1) % statuses.length;
+    updateStatus();
+  }
+
+  function reactStatus() { alert("You reacted ⭐ to this status."); }
+  function replyStatus() { alert("Reply feature coming soon!"); }
+  function closeStatus() {
+    clearInterval(statusInterval);
+    document.getElementById("statusViewer").style.display = "none";
+  }
+
+  function toggleDark() {
+    const isDark = document.body.classList.toggle("dark");
+    document.querySelector(".app").classList.toggle("dark");
+
+    const icon = document.getElementById("darkModeBtn");
+    icon.textContent = isDark ? "☀️" : "🌙";
+  }
+
+  function viewProfile() {
+    if (!currentChatContact) return;
+    const contactInfo = contactsData[currentChatContact];
+
+    document.getElementById("profilePagePic").src = contactInfo.img;
+    document.getElementById("profilePageName").innerText = currentChatContact;
+    document.getElementById("profilePage").style.display = "flex";
+    document.getElementById("app").style.display = "none";
+  }
+
+  function closeProfile() {
+    document.getElementById("profilePage").style.display = "none";
+    document.getElementById("app").style.display = "flex";
+  }
+
+
+  window.onload = populateContacts;
+</script>
+</body>
+</html>

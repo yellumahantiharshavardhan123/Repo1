@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Forgot Password - E-mesg</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background-color: #f1f1f1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background-color: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+    h2 {
+      margin-bottom: 20px;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 12px;
+      width: 100%;
+      border: none;
+      border-radius: 8px;
+      background-color: #007bff;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .message {
+      margin-top: 20px;
+      font-size: 1em;
+      color: green;
+    }
+    a.back {
+      display: inline-block;
+      margin-top: 20px;
+      color: #007bff;
+      text-decoration: none;
+      font-size: 0.9em;
+    }
+    a.back:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Forgot Password</h2>
+    <input type="tel" id="phone" placeholder="Enter your phone number" required />
+    <button onclick="sendReset()">Send Reset Link</button>
+    <div class="message" id="message"></div>
+    <a href="signin.html" class="back">← Back to Sign In</a>
+  </div>
+
+  <script>
+    function sendReset() {
+      const phone = document.getElementById("phone").value.trim();
+      const messageEl = document.getElementById("message");
+
+      if (phone === "") {
+        alert("Please enter your phone number.");
+        return;
+      }
+
+      // Simulate sending reset link
+      messageEl.textContent = `If the phone number ${phone} is registered, a password reset link has been sent.`;
+    }
+  </script>
+</body>
+</html>

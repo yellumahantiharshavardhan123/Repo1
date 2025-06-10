@@ -66,7 +66,7 @@
     <input type="tel" id="phone" placeholder="Phone Number" required />
     <input type="password" id="password" placeholder="Password" required />
     <button onclick="signIn()">Sign In</button>
-    <a href="#" class="forgot">Forgot Password?</a>
+    <a href="forgot.html" class="forgot">Forgot Password?</a> <!-- Updated link -->
   </div>
 
   <script>
@@ -76,7 +76,7 @@
 
       // Hardcoded credentials
       if (phone === "7416237272" && password === "harsha@2006") {
-        window.location.href = "sign.html"; // Redirect to sign.html instead of index.html
+        window.location.href = "home.html"; // Redirect to home.html after successful login
       } else {
         alert("Invalid phone number or password!");
       }

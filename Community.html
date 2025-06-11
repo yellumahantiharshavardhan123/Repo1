@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-mesg Communities</title>
+  <style>
+    /* Base Styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background: #f0f2f5;
+      height: 100vh;
+      overflow: hidden; /* Prevent body scroll, pages manage their own scroll */
+    }
+
+    /* Page Management */
+    .page {
+      display: none;
+      height: 100vh;
+      width: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      background: #f0f2f5; /* Ensure pages have a background */
+      flex-direction: column; /* Pages are flex containers for header, body, input */
+    }
+
+    .active {
+      display: flex; /* Show active page */
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px;
+      background: #075e54;
+      color: #fff;
+      flex-shrink: 0; /* Don't let header shrink */
+      position: relative; /* For positioning dropdown menu */
+    }
+
+    .header button {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 0 10px;
+    }
+
+    .header span {
+      flex-grow: 1;
+      text-align: center;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .header .header-icons {
+        display: flex; /* Use flexbox for icons */
+        align-items: center;
+        margin-left: 15px; /* Adjust spacing */
+    }
+    .header .header-icons i {
+      font-size: 20px;
+      cursor: pointer;
+      margin-left: 15px; /* Space between icons */
+    }
+
+    .header .header-icons i:disabled { /* Style for disabled header icons (e.g., call buttons) */
+        color: rgba(255, 255, 255, 0.5); /* Lighter white */
+        cursor: not-allowed;
+    }
+
+    /* Main Page Header specific style for options icon */
+    #mainPageHeader .header-icons {
+        margin-left: auto; /* Push icons to the right */
+        margin-right: 10px; /* Some padding from right edge */
+    }
+
+    /* Three Dots Options Menu (Common Styling) */
+    .options-menu {
+        position: absolute;
+        top: 55px; /* Below the header */
+        right: 10px;
+        background-color: #fff;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        min-width: 180px;
+        z-index: 1000; /* Ensure it's on top */
+        display: none; /* Hidden by default */
+        overflow: hidden; /* For rounded corners */
+    }
+
+    .options-menu.show {
+        display: block;
+    }
+
+    .options-menu .menu-item {
+        padding: 12px 15px;
+        font-size: 16px;
+        color: #333;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .options-menu .menu-item:hover {
+        background-color: #f0f0f0;
+    }
+
+    /* Tab Bar for Main Page */
+    .tab-bar {
+        display: flex;
+        justify-content: space-around;
+        background: #075e54;
+        color: #fff;
+        padding: 0; /* Remove default padding */
+        border-bottom: 2px solid #054a41;
+        flex-shrink: 0;
+    }
+
+    .tab-button {
+        flex: 1;
+        padding: 15px 0;
+        text-align: center;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 16px;
+        transition: background-color 0.3s ease, border-bottom 0.3s ease;
+        border-bottom: 3px solid transparent; /* Non-active tab border */
+    }
+
+    .tab-button.active-tab {
+        background-color: #054a41; /* Slightly darker background for active tab */
+        border-bottom: 3px solid #25d366; /* WhatsApp-like green underline */
+    }
+
+    /* Tab Content Containers */
+    .tab-content {
+        display: none;
+        flex-grow: 1; /* Allows content to fill space */
+        overflow-y: auto; /* For scrolling if content overflows */
+        padding-top: 10px; /* Space below header/tab bar */
+    }
+
+    .tab-content.active-content {
+        display: block; /* Show active content */
+    }
+
+
+    /* Cards (used in lists) */
+    .card {
+      background: #fff;
+      padding: 15px;
+      margin: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex; /* For avatar and text alignment */
+      align-items: center;
+    }
+
+    .card .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #25d366; /* Default avatar color */
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        font-size: 18px;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+
+    /* Chat/Announcement Body */
+    .chat-body {
+      flex-grow: 1; /* Take up remaining space */
+      overflow-y: auto; /* Enable scrolling for messages */
+      padding: 10px;
+      background: #e5ddd5;
+      display: flex;
+      flex-direction: column; /* Stack messages vertically */
+    }
+
+    /* Messages */
+    .message-container {
+        display: flex;
+        align-items: flex-end; /* Align avatar to message bottom */
+        margin: 5px 0;
+    }
+    .message-container.sent {
+        flex-direction: row-reverse; /* Reverse order for sent messages */
+    }
+
+    .message-avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background-color: #075e54; /* Default avatar color for system/others */
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 14px;
+        flex-shrink: 0;
+        margin: 0 8px; /* Space around avatar */
+    }
+
+    .message-container.sent .message-avatar {
+        background-color: #25d366; /* Different color for sent avatar */
+    }
+    .message.system + .message-avatar { /* Hide avatar for system messages */
+        display: none;
+    }
+
+
+    .message {
+      background: #dcf8c6;
+      padding: 10px;
+      border-radius: 8px;
+      max-width: 70%;
+      word-wrap: break-word; /* Ensure long words break */
+      position: relative; /* For emoji reaction button positioning */
+    }
+
+    .message.sent {
+        background: #075e54;
+        color: #fff;
+    }
+
+    .message.system {
+        background: #cce7e0;
+        color: #333;
+        font-style: italic;
+        text-align: center;
+        align-self: center; /* Center system messages */
+        max-width: 90%;
+        margin: 5px auto; /* Centering */
+    }
+    .message.system .reaction-btn { /* Hide reaction btn for system messages */
+        display: none;
+    }
+
+    .reaction-btn {
+        background: none;
+        border: none;
+        font-size: 16px;
+        cursor: pointer;
+        color: #666;
+        padding: 2px 5px;
+        border-radius: 5px;
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
+        opacity: 0.8;
+        transition: opacity 0.2s;
+    }
+    .reaction-btn:hover {
+        opacity: 1;
+        background-color: rgba(0,0,0,0.05);
+    }
+
+
+    /* Input Bar */
+    .input-bar {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      background: #f0f0f0;
+      flex-shrink: 0; /* Don't let input bar shrink */
+    }
+
+    .input-bar input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 20px;
+      border: none;
+      margin-right: 10px;
+      outline: none; /* Remove outline on focus */
+    }
+
+    .input-bar button {
+      background: none;
+      border: none;
+      font-size: 22px; /* Larger icons */
+      margin-left: 5px;
+      cursor: pointer;
+      color: #075e54; /* Icon color */
+    }
+
+    .input-bar button:disabled {
+        color: gray;
+        cursor: not-allowed;
+    }
+
+    /* Profile Page Specifics */
+    .group-list .card {
+      padding: 10px 15px;
+      font-size: 15px;
+      margin: 10px 0; /* Reset horizontal margin for group list cards */
+    }
+    .group-list .card .avatar { /* Hide avatar in group list */
+        display: none;
+    }
+
+    #profilePage {
+        padding: 20px;
+        overflow-y: auto;
+    }
+
+    #profilePage h2 {
+        margin-bottom: 10px;
+        color: #075e54;
+    }
+
+    #profilePage p {
+        margin-bottom: 15px;
+        line-height: 1.5;
+    }
+
+    #profilePage h3 {
+        margin-top: 20px;
+        margin-bottom: 10px;
+        color: #075e54;
+    }
+
+    /* Admin Toggle Button Styling */
+    .admin-toggle-btn {
+        margin: 10px auto;
+        padding: 8px 15px;
+        background-color: #075e54;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        display: block; /* Make it a block element to center with margin auto */
+    }
+    .admin-toggle-btn:hover {
+        background-color: #054a41;
+    }
+
+  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+</head>
+<body>
+  <div id="mainPage" class="page active">
+    <div class="header" id="mainPageHeader">
+      <h2 style="color:#fff; flex-grow: 1; text-align: center;">E-mesg</h2>
+      <div class="header-icons">
+        <i class="fas fa-ellipsis-v" onclick="toggleMainMenu()"></i>
+      </div>
+      <div id="mainMenuOptions" class="options-menu">
+        <div class="menu-item" onclick="newCommunity()">New community</div>
+        <div class="menu-item" onclick="linkedDevices()">Linked devices</div>
+        <div class="menu-item" onclick="readAll()">Read all</div>
+        <div class="menu-item" onclick="settings()">Settings</div>
+      </div>
+    </div>
+
+    <div class="tab-bar">
+        <div class="tab-button active-tab" id="communitiesTabBtn" onclick="showTab('communities')">Communities</div>
+        <div class="tab-button" id="announcementsTabBtn" onclick="showTab('announcements')">Announcements</div>
+    </div>
+
+    <div id="communityTabContent" class="tab-content active-content">
+      <div id="communityList">
+        <div class="card" onclick="openCommunity('Tech Learners')">
+            <div class="avatar">TL</div>
+            Tech Learners
+        </div>
+        <div class="card" onclick="openCommunity('Fitness Freaks')">
+            <div class="avatar">FF</div>
+            Fitness Freaks
+        </div>
+        <div class="card" onclick="openCommunity('Music Vibes')">
+            <div class="avatar">MV</div>
+            Music Vibes
+        </div>
+        <div class="card" onclick="openCommunity('Startup Circle')">
+            <div class="avatar">SC</div>
+            Startup Circle
+        </div>
+        <div class="card" onclick="openCommunity('Career Talk')">
+            <div class="avatar">CT</div>
+            Career Talk
+        </div>
+        <div class="card" onclick="openCommunity('Gamers Zone')">
+            <div class="avatar">GZ</div>
+            Gamers Zone
+        </div>
+        <div class="card" onclick="openCommunity('Movie Buffs')">
+            <div class="avatar">MB</div>
+            Movie Buffs
+        </div>
+        <div class="card" onclick="openCommunity('Book Club')">
+            <div class="avatar">BC</div>
+            Book Club
+        </div>
+        <div class="card" onclick="openCommunity('Travel Diaries')">
+            <div class="avatar">TD</div>
+            Travel Diaries
+        </div>
+        <div class="card" onclick="openCommunity('Art Lovers')">
+            <div class="avatar">AL</div>
+            Art Lovers
+        </div>
+      </div>
+    </div>
+
+    <div id="announcementTabContent" class="tab-content">
+      <p style="text-align: center; margin-top: 20px; color: #555;">Loading community announcements...</p>
+    </div>
+  </div>
+
+  <div id="chatPage" class="page">
+    <div class="header">
+      <button onclick="goBack()">🔙</button>
+      <span id="chatTitle" onclick="openProfile()"></span>
+      <div class="header-icons">
+        <i class="fas fa-phone" onclick="startAudioCall()" id="chatAudioCallBtn"></i>
+        <i class="fas fa-video" onclick="startVideoCall()" id="chatVideoCallBtn"></i>
+        <i class="fas fa-microphone" onclick="toggleHeaderMic()"></i>
+        <i class="fas fa-ellipsis-v" onclick="toggleChatMenu()"></i>
+      </div>
+      <div id="chatMenuOptions" class="options-menu">
+        <div class="menu-item" onclick="chatCommunityInfo()">Community info</div>
+        <div class="menu-item" onclick="communityMedia()">Community media</div>
+        <div class="menu-item" onclick="sortChatMessages()">Sorting mesg</div>
+        <div class="menu-item" onclick="clearChat()">Clear chat</div>
+        <div class="menu-item" onclick="exitChat()">Exit</div>
+      </div>
+    </div>
+    <div class="chat-body" id="chatBody">
+      <div class="message-container">
+        <div class="message-avatar">S</div>
+        <div class="message">Welcome to the community chat!</div>
+      </div>
+    </div>
+    <div class="input-bar">
+      <input type="text" id="messageInput" placeholder="Type a message (Informal mode)">
+      <input type="file" id="chatFileInput" style="display: none;" onchange="handleChatFileSelect()">
+      <button onclick="triggerChatFileInput()" id="chatFileShareBtn"><i class="fas fa-paperclip"></i></button>
+      <button id="chatVoiceMessageBtn" onclick="toggleChatVoiceMessage()"><i class="fas fa-microphone"></i></button>
+      <button onclick="toggleChatToneMode()" id="chatToneRobotBtn"><i class="fas fa-robot"></i></button>
+      <button onclick="sendMessage()" id="chatSendBtn"><i class="fas fa-paper-plane"></i></button>
+    </div>
+    <button onclick="toggleAdminMode()" class="admin-toggle-btn">Toggle Admin Mode</button>
+  </div>
+
+  <div id="communityAnnouncementPage" class="page">
+    <div class="header">
+      <button onclick="goBackFromCommunityAnnouncement()">🔙</button>
+      <span id="communityAnnouncementTitle"></span>
+      <div class="header-icons">
+        <i class="fas fa-phone" onclick="startAnnouncementAudioCall()" id="announcementAudioCallBtn"></i>
+        <i class="fas fa-video" onclick="startAnnouncementVideoCall()" id="announcementVideoCallBtn"></i>
+        <i class="fas fa-microphone" onclick="toggleAnnouncementHeaderMic()" id="announcementHeaderMicBtn"></i>
+      </div>
+    </div>
+    <div class="chat-body" id="communityAnnouncementBody">
+      <div class="message-container">
+        <div class="message-avatar">A</div>
+        <div class="message system">Admin-only announcements will appear here.</div>
+      </div>
+    </div>
+    <div class="input-bar">
+      <input type="text" id="announcementMessageInput" placeholder="Only admin can post here..." disabled>
+      <input type="file" id="announcementFileInput" style="display: none;" onchange="handleAnnouncementFileSelect()">
+      <button onclick="triggerAnnouncementFileInput()" id="announcementFileShareBtn" disabled><i class="fas fa-paperclip"></i></button>
+      <button id="announcementVoiceMessageBtn" onclick="toggleAnnouncementVoiceMessage()" disabled><i class="fas fa-microphone"></i></button>
+      <button onclick="toggleAnnouncementToneMode()" id="announcementToneRobotBtn" disabled><i class="fas fa-robot"></i></button>
+      <button onclick="sendAnnouncement()" id="announcementSendBtn" disabled><i class="fas fa-paper-plane"></i></button>
+    </div>
+    <button onclick="toggleAdminMode()" class="admin-toggle-btn">Toggle Admin Mode</button>
+  </div>
+
+
+  <div id="profilePage" class="page">
+    <div class="header">
+      <button onclick="backToChat()">🔙</button>
+      <span>Community Info</span>
+    </div>
+    <div style="padding: 20px;">
+      <h2 id="communityName"></h2>
+      <p><strong>Description:</strong> This community brings together like-minded individuals to share, discuss, and grow.</p>
+      <p><strong>Ideology:</strong> Learn, collaborate, and inspire change.</p>
+      <h3>Groups in this community:</h3>
+      <div class="group-list">
+        <div class="card">Group 1 - 120 members</div>
+        <div class="card">Group 2 - 87 members</div>
+        <div class="card">Group 3 - 102 members</div>
+        <div class="card">Group 4 - 94 members</div>
+        <div class="card">Group 5 - 143 members</div>
+        <div class="card">Group 6 - 58 members</div>
+        <div class="card">Group 7 - 61 members</div>
+        <div class="card">Group 8 - 80 members</div>
+        <div class="card">Group 9 - 76 members</div>
+        <div class="card">Group 10 - 99 members</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Global Data and State ---
+    let currentCommunity = ''; // For the active chat community
+    let currentAnnouncementCommunity = ''; // For the active announcement community
+    let isChatRecordingVoiceMessage = false;
+    let isAnnouncementRecordingVoiceMessage = false;
+    let currentChatToneMode = 'Informal';
+    let currentAnnouncementToneMode = 'Informal';
+    let isAdmin = false; // Global admin flag
+
+    // Data structure to hold communities and their announcements
+    // Each community object has a name and an array of its announcements.
+    // Announcements are stored as {text: "message", type: "sent"|"system", sender: "Admin"}
+    let communitiesData = [
+      { name: 'Tech Learners', announcements: [{text: 'Welcome to Tech Learners announcements!', type: 'system', sender: 'System'}] },
+      { name: 'Fitness Freaks', announcements: [{text: 'Get ready to sweat with our latest fitness tips!', type: 'system', sender: 'System'}] },
+      { name: 'Music Vibes', announcements: [{text: 'New music releases and event updates!', type: 'system', sender: 'System'}] },
+      { name: 'Startup Circle', announcements: [{text: 'Latest news and funding opportunities.', type: 'system', sender: 'System'}] },
+      { name: 'Career Talk', announcements: [{text: 'Tips for career growth and job openings.', type: 'system', sender: 'System'}] },
+      { name: 'Gamers Zone', announcements: [{text: 'Weekly gaming event schedules.', type: 'system', sender: 'System'}] },
+      { name: 'Movie Buffs', announcements: [{text: 'Upcoming movie premieres and reviews.', type: 'system', sender: 'System'}] },
+      { name: 'Book Club', announcements: [{text: 'Discussion on our current book of the month.', type: 'system', sender: 'System'}] },
+      { name: 'Travel Diaries', announcements: [{text: 'New travel destinations and safety tips.', type: 'system', sender: 'System'}] },
+      { name: 'Art Lovers', announcements: [{text: 'Exhibition details and art class schedules.', type: 'system', sender: 'System'}] },
+    ];
+
+    // --- Helper Function ---
+    function createMessageElement(text, type, senderInitial = 'S', showReactionBtn = false) {
+        const messageContainer = document.createElement('div');
+        messageContainer.classList.add('message-container');
+        if (type === 'sent') {
+            messageContainer.classList.add('sent');
+        }
+
+        if (type !== 'system') { // System messages don't have an avatar
+            const avatarDiv = document.createElement('div');
+            avatarDiv.classList.add('message-avatar');
+            avatarDiv.innerText = senderInitial;
+            messageContainer.appendChild(avatarDiv);
+        }
+
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', type);
+        messageDiv.innerText = text;
+
+        if (showReactionBtn && type !== 'system') { // Only show reaction button for non-system messages
+            const reactionBtn = document.createElement('button');
+            reactionBtn.classList.add('reaction-btn');
+            reactionBtn.innerHTML = '😊'; // A simple emoji
+            reactionBtn.onclick = (event) => {
+                event.stopPropagation(); // Prevent message click if any
+                alert(`Reacted to: "${text}" with 😊`);
+            };
+            messageDiv.appendChild(reactionBtn);
+        }
+
+        messageContainer.appendChild(messageDiv);
+        return messageContainer;
+    }
+
+    function addMessageToBody(bodyId, text, type = 'sent', senderInitial = 'S', showReactionBtn = false) {
+      const chatBody = document.getElementById(bodyId);
+        const messageElement = createMessageElement(text, type, senderInitial, showReactionBtn);
+        chatBody.appendChild(messageElement);
+        chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+
+    // --- Tab Navigation Logic ---
+    function showTab(tabName) {
+        // Deactivate all tab buttons and content
+        document.getElementById('communitiesTabBtn').classList.remove('active-tab');
+        document.getElementById('announcementsTabBtn').classList.remove('active-tab');
+        document.getElementById('communityTabContent').classList.remove('active-content');
+        document.getElementById('announcementTabContent').classList.remove('active-content');
+
+        // Activate the selected tab button and content
+        if (tabName === 'communities') {
+            document.getElementById('communitiesTabBtn').classList.add('active-tab');
+            document.getElementById('communityTabContent').classList.add('active-content');
+        } else if (tabName === 'announcements') {
+            document.getElementById('announcementsTabBtn').classList.add('active-tab');
+            document.getElementById('announcementTabContent').classList.add('active-content');
+            // Dynamically populate announcement cards when the tab is opened
+            populateAnnouncementCards();
+        }
+        // Ensure main menu is closed when tab changes
+        document.getElementById('mainMenuOptions').classList.remove('show');
+    }
+
+    function populateAnnouncementCards() {
+        const announcementTabContent = document.getElementById('announcementTabContent');
+        announcementTabContent.innerHTML = ''; // Clear previous cards
+
+        communitiesData.forEach(community => {
+            const card = document.createElement('div');
+            card.classList.add('card');
+            card.onclick = () => openCommunityAnnouncementPage(community.name);
+
+            const avatarDiv = document.createElement('div');
+            avatarDiv.classList.add('avatar');
+            avatarDiv.innerText = community.name.substring(0, 2).toUpperCase(); // First two letters
+            card.appendChild(avatarDiv);
+
+            const textSpan = document.createElement('span');
+            textSpan.innerText = `Announcements for ${community.name}`;
+            card.appendChild(textSpan);
+
+            announcementTabContent.appendChild(card);
+        });
+
+        if (communitiesData.length === 0) {
+             announcementTabContent.innerHTML = '<p style="text-align: center; margin-top: 20px; color: #555;">No communities with announcements yet.</p>';
+        }
+    }
+
+
+    // --- Page Navigation Functions ---
+    function openCommunity(name) {
+      currentCommunity = name;
+      document.getElementById('chatTitle').innerText = name;
+      document.getElementById('mainPage').classList.remove('active');
+      document.getElementById('communityAnnouncementPage').classList.remove('active'); // Ensure announcement page is off
+      document.getElementById('profilePage').classList.remove('active'); // Ensure profile page is off
+      document.getElementById('chatPage').classList.add('active');
+      document.getElementById('chatBody').innerHTML = ''; // Clear chat body
+      addMessageToBody('chatBody', 'Welcome to the community chat!', 'system', 'S'); // System message
+      currentChatToneMode = 'Informal'; // Reset tone
+      document.getElementById('messageInput').placeholder = 'Type a message (Informal mode)';
+      updateChatButtonStates(); // Update chat buttons
+      document.getElementById('mainMenuOptions').classList.remove('show'); // Close main menu on navigation
+      document.getElementById('chatMenuOptions').classList.remove('show'); // Ensure chat menu is closed
+    }
+
+    function openCommunityAnnouncementPage(communityName) {
+      currentAnnouncementCommunity = communityName;
+      document.getElementById('communityAnnouncementTitle').innerText = `${communityName} Announcements`;
+      document.getElementById('mainPage').classList.remove('active');
+      document.getElementById('chatPage').classList.remove('active'); // Ensure chat page is off
+      document.getElementById('profilePage').classList.remove('active'); // Ensure profile page is off
+      document.getElementById('communityAnnouncementPage').classList.add('active');
+
+      const announcementBody = document.getElementById('communityAnnouncementBody');
+      announcementBody.innerHTML = ''; // Clear previous messages
+
+      // Load announcements for this specific community
+      const community = communitiesData.find(c => c.name === communityName);
+      if (community && community.announcements.length > 0) {
+        community.announcements.forEach(msg => {
+            // All announcements are from Admin/System, so always show reaction button
+            addMessageToBody('communityAnnouncementBody', msg.text, msg.type, msg.sender.substring(0,1), true);
+        });
+      } else {
+        addMessageToBody('communityAnnouncementBody', 'Admin-only announcements will appear here.', 'system', 'S', false);
+      }
+
+      currentAnnouncementToneMode = 'Informal'; // Reset tone for this specific announcement page
+      document.getElementById('announcementMessageInput').placeholder = 'Only admin can post here...';
+      updateAnnouncementButtonStates(); // Update announcement buttons based on admin status
+      document.getElementById('mainMenuOptions').classList.remove('show'); // Close main menu on navigation
+    }
+
+
+    function goBack() { // From Chat Page to Main Page
+      document.getElementById('chatPage').classList.remove('active');
+      document.getElementById('mainPage').classList.add('active');
+      showTab('communities'); // Return to communities tab
+      document.getElementById('chatMenuOptions').classList.remove('show'); // Ensure chat menu is closed
+    }
+
+    function goBackFromCommunityAnnouncement() { // From Community Announcement Page to Main Page
+        document.getElementById('communityAnnouncementPage').classList.remove('active');
+        document.getElementById('mainPage').classList.add('active');
+        showTab('announcements'); // Return to announcements tab
+    }
+
+    function openProfile() {
+      document.getElementById('chatPage').classList.remove('active');
+      document.getElementById('profilePage').classList.add('active');
+      document.getElementById('communityName').innerText = currentCommunity;
+      document.getElementById('mainMenuOptions').classList.remove('show'); // Close main menu on navigation
+      document.getElementById('chatMenuOptions').classList.remove('show'); // Ensure chat menu is closed
+    }
+
+    function backToChat() {
+      document.getElementById('profilePage').classList.remove('active');
+      document.getElementById('chatPage').classList.add('active');
+      document.getElementById('mainMenuOptions').classList.remove('show'); // Close main menu on navigation
+      document.getElementById('chatMenuOptions').classList.remove('show'); // Ensure chat menu is closed
+    }
+
+    // --- Global Admin Toggle ---
+    function toggleAdminMode() {
+        isAdmin = !isAdmin;
+        alert(isAdmin ? 'Admin mode enabled!' : 'Admin mode disabled.');
+        updateChatButtonStates(); // Update chat buttons
+        updateAnnouncementButtonStates(); // Update announcement buttons
+        // Update placeholder for announcement input when admin mode changes
+        document.getElementById('announcementMessageInput').placeholder = isAdmin ? `Type a message (Admin: ${currentAnnouncementToneMode} mode)` : 'Only admin can post here...';
+    }
+
+    // --- Main Menu Options Functions ---
+    function toggleMainMenu() {
+        const menu = document.getElementById('mainMenuOptions');
+        menu.classList.toggle('show');
+        // Ensure chat menu is closed if user opens main menu
+        document.getElementById('chatMenuOptions').classList.remove('show');
+    }
+
+    // Close main menu if clicked outside
+    document.addEventListener('click', function(event) {
+        const mainMenu = document.getElementById('mainMenuOptions');
+        const mainEllipsisIcon = document.querySelector('#mainPageHeader .fa-ellipsis-v');
+        if (mainMenu.classList.contains('show') && !mainMenu.contains(event.target) && !mainEllipsisIcon.contains(event.target)) {
+            mainMenu.classList.remove('show');
+        }
+
+        const chatMenu = document.getElementById('chatMenuOptions');
+        const chatEllipsisIcon = document.querySelector('#chatPage .header-icons .fa-ellipsis-v');
+        if (chatMenu && chatMenu.classList.contains('show') && !chatMenu.contains(event.target) && (!chatEllipsisIcon || !chatEllipsisIcon.contains(event.target))) {
+            chatMenu.classList.remove('show');
+        }
+    });
+
+
+    function newCommunity() {
+        alert('Simulating: Create a new community...');
+        toggleMainMenu(); // Close menu
+    }
+
+    function linkedDevices() {
+        alert('Simulating: Display linked devices information...');
+        toggleMainMenu(); // Close menu
+    }
+
+    function readAll() {
+        alert('Simulating: All messages marked as read across all communities.');
+        toggleMainMenu(); // Close menu
+    }
+
+    function settings() {
+        alert('Simulating: Opening settings...');
+        toggleMainMenu(); // Close menu
+    }
+
+    // --- Chat Page Menu Options Functions ---
+    function toggleChatMenu() {
+        const menu = document.getElementById('chatMenuOptions');
+        menu.classList.toggle('show');
+        // Ensure main menu is closed if user opens chat menu
+        document.getElementById('mainMenuOptions').classList.remove('show');
+    }
+
+    function chatCommunityInfo() {
+        openProfile(); // Re-use existing function
+        toggleChatMenu(); // Close menu
+    }
+
+    function communityMedia() {
+        alert(`Simulating: Showing media for ${currentCommunity}.`);
+        toggleChatMenu(); // Close menu
+    }
+
+    function sortChatMessages() {
+        const query = prompt("Enter date (DD), month (MM), or year (YYYY) to search messages in this chat:");
+        if (query) {
+            addMessageToBody('chatBody', `Simulating: Searching for messages related to "${query}" in ${currentCommunity}.`, 'system', 'S');
+        } else {
+            addMessageToBody('chatBody', 'Chat message search cancelled.', 'system', 'S');
+        }
+        toggleChatMenu(); // Close menu
+    }
+
+    function clearChat() {
+        if (confirm(`Are you sure you want to clear all messages in ${currentCommunity}?`)) {
+            document.getElementById('chatBody').innerHTML = '';
+            addMessageToBody('chatBody', `Chat history for ${currentCommunity} cleared.`, 'system', 'S');
+            alert(`Chat cleared for ${currentCommunity}.`);
+        }
+        toggleChatMenu(); // Close menu
+    }
+
+    function exitChat() {
+        alert(`Exiting ${currentCommunity} chat.`);
+        toggleChatMenu(); // Close menu
+        goBack(); // Return to main communities list
+    }
+
+
+    // --- Chat Page Functionalities (existing) ---
+    function sendMessage() {
+      const messageInput = document.getElementById('messageInput');
+      const messageText = messageInput.value.trim();
+
+      if (messageText !== '') {
+        // For simplicity, all sent messages in chat are from "Me"
+        addMessageToBody('chatBody', messageText, 'sent', 'M');
+        messageInput.value = '';
+      }
+    }
+
+    document.getElementById('messageInput').addEventListener('keypress', function(event) {
+      if (event.key === 'Enter') {
+        sendMessage();
+      }
+    });
+
+    function startAudioCall() { alert(`Starting audio call in ${currentCommunity}...`); }
+    function startVideoCall() { alert(`Starting video call in ${currentCommunity}...`); }
+    function toggleHeaderMic() { alert("Chat header microphone toggled (likely for in-call mute/unmute)."); }
+
+    function triggerChatFileInput() { document.getElementById('chatFileInput').click(); }
+    function handleChatFileSelect() {
+      const fileInput = document.getElementById('chatFileInput');
+      if (fileInput.files.length > 0) {
+        const fileName = fileInput.files[0].name;
+        addMessageToBody('chatBody', `File shared: ${fileName}`, 'system', 'S'); // System message for file share
+        console.log(`Chat File selected: ${fileName}`);
+      }
+      fileInput.value = '';
+    }
+
+    function toggleChatVoiceMessage() {
+      const voiceMessageBtn = document.getElementById('chatVoiceMessageBtn');
+      if (isChatRecordingVoiceMessage) {
+        isChatRecordingVoiceMessage = false;
+        voiceMessageBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+        addMessageToBody('chatBody', 'Voice message sent!', 'system', 'S'); // System message for voice
+        console.log("Chat Voice message recording stopped and sent.");
+      } else {
+        isChatRecordingVoiceMessage = true;
+        voiceMessageBtn.innerHTML = '<i class="fas fa-stop-circle" style="color: red;"></i>';
+        console.log("Chat Voice message recording started...");
+      }
+    }
+
+    function toggleChatToneMode() {
+      const messageInput = document.getElementById('messageInput');
+      if (currentChatToneMode === 'Informal') {
+        currentChatToneMode = 'Formal';
+        messageInput.placeholder = 'Type a message (Formal mode - Text only)';
+        addMessageToBody('chatBody', 'Switched to Formal tone mode. Other features disabled unless admin.', 'system', 'S');
+      } else {
+        currentChatToneMode = 'Informal';
+        messageInput.placeholder = 'Type a message (Informal mode)';
+        addMessageToBody('chatBody', 'Switched to Informal tone mode.', 'system', 'S');
+      }
+      console.log(`Chat Tone mode changed to: ${currentChatToneMode}`);
+      updateChatButtonStates();
+    }
+
+    function updateChatButtonStates() {
+      const fileShareBtn = document.getElementById('chatFileShareBtn');
+      const voiceMessageBtn = document.getElementById('chatVoiceMessageBtn');
+      const audioCallBtn = document.getElementById('chatAudioCallBtn');
+      const videoCallBtn = document.getElementById('chatVideoCallBtn');
+      // No need to disable toneRobotBtn, sendBtn, messageInput based on tone or admin in general chat
+      // as text messaging is always allowed.
+
+      const disableNonText = currentChatToneMode === 'Formal' && !isAdmin;
+
+      fileShareBtn.disabled = disableNonText;
+      voiceMessageBtn.disabled = disableNonText;
+      audioCallBtn.disabled = disableNonText;
+      videoCallBtn.disabled = disableNonText;
+
+      fileShareBtn.style.color = disableNonText ? 'gray' : '#075e54';
+      voiceMessageBtn.style.color = disableNonText ? 'gray' : '#075e54';
+      audioCallBtn.style.color = disableNonText ? 'gray' : 'white';
+      videoCallBtn.style.color = disableNonText ? 'gray' : 'white';
+    }
+
+
+    // --- Community-Specific Announcement Page Functionalities ---
+    function sendAnnouncement() {
+      const announcementInput = document.getElementById('announcementMessageInput');
+      const messageText = announcementInput.value.trim();
+
+      if (messageText !== '') {
+        // Announce messages are always from 'Admin'
+        addMessageToBody('communityAnnouncementBody', messageText, 'sent', 'A', true);
+        // Save the announcement to the specific community's data
+        const community = communitiesData.find(c => c.name === currentAnnouncementCommunity);
+        if (community) {
+            community.announcements.push({text: messageText, type: 'sent', sender: 'Admin'});
+        }
+        announcementInput.value = '';
+      }
+    }
+
+    document.getElementById('announcementMessageInput').addEventListener('keypress', function(event) {
+      if (event.key === 'Enter' && !this.disabled) {
+        sendAnnouncement();
+      }
+    });
+
+    function startAnnouncementAudioCall() { alert(`Simulating audio call from ${currentAnnouncementCommunity} Announcements.`); }
+    function startAnnouncementVideoCall() { alert(`Simulating video call from ${currentAnnouncementCommunity} Announcements.`); }
+    function toggleAnnouncementHeaderMic() { alert("Announcement header microphone toggled."); }
+
+    function triggerAnnouncementFileInput() { document.getElementById('announcementFileInput').click(); }
+    function handleAnnouncementFileSelect() {
+      const fileInput = document.getElementById('announcementFileInput');
+      if (fileInput.files.length > 0) {
+        const fileName = fileInput.files[0].name;
+        addMessageToBody('communityAnnouncementBody', `Admin shared file: ${fileName}`, 'system', 'S', true);
+        // Save the announcement to the specific community's data
+        const community = communitiesData.find(c => c.name === currentAnnouncementCommunity);
+        if (community) {
+            community.announcements.push({text: `Admin shared file: ${fileName}`, type: 'system', sender: 'System'});
+        }
+        console.log(`Announcement File selected: ${fileName}`);
+      }
+      fileInput.value = '';
+    }
+
+    function toggleAnnouncementVoiceMessage() {
+      const voiceMessageBtn = document.getElementById('announcementVoiceMessageBtn');
+      if (isAnnouncementRecordingVoiceMessage) {
+        isAnnouncementRecordingVoiceMessage = false;
+        voiceMessageBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+        addMessageToBody('communityAnnouncementBody', 'Admin sent voice message!', 'system', 'S', true);
+        // Save the announcement to the specific community's data
+        const community = communitiesData.find(c => c.name === currentAnnouncementCommunity);
+        if (community) {
+            community.announcements.push({text: 'Admin sent voice message!', type: 'system', sender: 'System'});
+        }
+        console.log("Announcement Voice message recording stopped and sent.");
+      } else {
+        isAnnouncementRecordingVoiceMessage = true;
+        voiceMessageBtn.innerHTML = '<i class="fas fa-stop-circle" style="color: red;"></i>';
+        console.log("Announcement Voice message recording started...");
+      }
+    }
+
+    function toggleAnnouncementToneMode() {
+      const announcementInput = document.getElementById('announcementMessageInput');
+      if (currentAnnouncementToneMode === 'Informal') {
+        currentAnnouncementToneMode = 'Formal';
+        announcementInput.placeholder = 'Type a message (Admin: Formal mode)';
+        addMessageToBody('communityAnnouncementBody', 'Admin switched to Formal tone for announcements.', 'system', 'S');
+      } else {
+        currentAnnouncementToneMode = 'Informal';
+        announcementInput.placeholder = 'Type a message (Admin: Informal mode)';
+        addMessageToBody('communityAnnouncementBody', 'Admin switched to Informal tone for announcements.', 'system', 'S');
+      }
+      console.log(`Announcement Tone mode changed to: ${currentAnnouncementToneMode}`);
+    }
+
+    function updateAnnouncementButtonStates() {
+      const announcementInput = document.getElementById('announcementMessageInput');
+      const fileShareBtn = document.getElementById('announcementFileShareBtn');
+      const voiceMessageBtn = document.getElementById('announcementVoiceMessageBtn');
+      const toneRobotBtn = document.getElementById('announcementToneRobotBtn');
+      const sendBtn = document.getElementById('announcementSendBtn');
+      const audioCallBtn = document.getElementById('announcementAudioCallBtn');
+      const videoCallBtn = document.getElementById('announcementVideoCallBtn');
+      const headerMicBtn = document.getElementById('announcementHeaderMicBtn');
+
+      let disableAll = true; // Default: disable all for non-admin
+      let disableNonTextForAdmin = false; // For admin, based on tone mode
+
+      if (isAdmin) {
+          disableAll = false; // If admin, enable basic input
+          if (currentAnnouncementToneMode === 'Formal') {
+              disableNonTextForAdmin = true; // If formal, disable non-text for admin
+          }
+      }
+
+      // Apply primary disabled state based on isAdmin
+      announcementInput.disabled = disableAll;
+      fileShareBtn.disabled = disableAll;
+      voiceMessageBtn.disabled = disableAll;
+      toneRobotBtn.disabled = disableAll;
+      sendBtn.disabled = disableAll;
+      audioCallBtn.disabled = disableAll;
+      videoCallBtn.disabled = disableAll;
+      headerMicBtn.disabled = disableAll;
+
+      // If it's admin, apply the tone-based restrictions to non-text features
+      if (isAdmin) {
+        fileShareBtn.disabled = disableNonTextForAdmin;
+        voiceMessageBtn.disabled = disableNonTextForAdmin;
+        audioCallBtn.disabled = disableNonTextForAdmin;
+        videoCallBtn.disabled = disableNonTextForAdmin;
+        // toneRobotBtn and sendBtn always active for admin to control tone/send text
+      }
+
+
+      // Update button colors
+      fileShareBtn.style.color = fileShareBtn.disabled ? 'gray' : '#075e54';
+      voiceMessageBtn.style.color = voiceMessageBtn.disabled ? 'gray' : '#075e54';
+      toneRobotBtn.style.color = toneRobotBtn.disabled ? 'gray' : '#075e54';
+      sendBtn.style.color = sendBtn.disabled ? 'gray' : '#075e54';
+      audioCallBtn.style.color = audioCallBtn.disabled ? 'gray' : 'white';
+      videoCallBtn.style.color = videoCallBtn.disabled ? 'gray' : 'white';
+      headerMicBtn.style.color = headerMicBtn.disabled ? 'gray' : 'white';
+
+      // Update placeholder for input
+      announcementInput.placeholder = isAdmin ? `Type a message (Admin: ${currentAnnouncementToneMode} mode)` : 'Only admin can post here...';
+    }
+
+
+    // --- Initial Setup ---
+    // Ensure the correct tab is shown initially (e.g., Communities)
+    showTab('communities');
+    // Set initial button states for all pages
+    updateChatButtonStates();
+    updateAnnouncementButtonStates();
+
+  </script>
+</body>
+</html>
+      
+        
+    

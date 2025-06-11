@@ -1,4 +1,3 @@
-<!-- Save this as home.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -50,6 +49,10 @@
       border-radius: 10px;
       cursor: pointer;
     }
+    /* Specific styling for the Community Chats button to distinguish it if needed */
+    .btn-group .community-chats-btn {
+        background-color: #28a745; /* A distinct green color */
+    }
   </style>
 </head>
 <body>
@@ -61,7 +64,7 @@
 
   <div class="btn-group">
     <button onclick="location.href='chat.html'">💬 Chat</button>
-    <button onclick="location.href='status.html'">⭐ Status</button>
+    <button class="community-chats-btn" onclick="location.href='index.html'">👥 Community Chats</button>
     <button onclick="location.href='about.html'">ℹ️ About</button>
   </div>
 

@@ -6,23 +6,24 @@
   <title>E-mesg Communities</title>
   <style>
     /* Base Styles */
-    * {
-      box-sizing: border-box;
+    html, body {
+      box-sizing: border-box; /* Good practice */
       margin: 0;
       padding: 0;
       font-family: 'Segoe UI', sans-serif;
+      height: 100%; /* ADDED/MODIFIED: Ensures html takes full height */
     }
 
     body {
       background: #f0f2f5;
-      height: 100vh;
+      height: 100%; /* MODIFIED: Ensures body takes full height from html */
       overflow: hidden; /* Prevent body scroll, pages manage their own scroll */
     }
 
     /* Page Management */
     .page {
       display: none;
-      height: 100vh;
+      height: 100%; /* MODIFIED: Ensures pages take 100% of body's height */
       width: 100%;
       position: absolute;
       top: 0;
@@ -512,7 +513,7 @@
   </div>
 
   <script>
-    // --- Global Data and State ---
+        // --- Global Data and State ---
     let currentCommunity = ''; // For the active chat community
     let currentAnnouncementCommunity = ''; // For the active announcement community
     let isChatRecordingVoiceMessage = false;
@@ -567,13 +568,13 @@
             messageDiv.appendChild(reactionBtn);
         }
 
-        messageContainer.appendChild(messageDiv);
+    messageContainer.appendChild(messageDiv);
         return messageContainer;
     }
 
     function addMessageToBody(bodyId, text, type = 'sent', senderInitial = 'S', showReactionBtn = false) {
       const chatBody = document.getElementById(bodyId);
-        const messageElement = createMessageElement(text, type, senderInitial, showReactionBtn);
+       const messageElement = createMessageElement(text, type, senderInitial, showReactionBtn);
         chatBody.appendChild(messageElement);
         chatBody.scrollTop = chatBody.scrollHeight;
     }
@@ -975,7 +976,7 @@
 
       if (isAdmin) {
           disableAll = false; // If admin, enable basic input
-          if (currentAnnouncementToneMode === 'Formal') {
+if (currentAnnouncementToneMode === 'Formal') {
               disableNonTextForAdmin = true; // If formal, disable non-text for admin
           }
       }
@@ -1024,6 +1025,3 @@
   </script>
 </body>
 </html>
-      
-        
-    

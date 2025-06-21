@@ -58,29 +58,51 @@
       text-decoration: underline;
     }
   </style>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js"></script>
+
+  <script>
+    // Your Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCqt7cbSz_ZfghbsJ4whSMWZg5...",
+      authDomain: "e-mesg-6fd57.firebaseapp.com",
+      projectId: "e-mesg-6fd57",
+      storageBucket: "e-mesg-6fd57.appspot.com",
+      messagingSenderId: "12093292651",
+      appId: "1:12093292651:web:dd0d626d62f72e...",
+      measurementId: "G-GW3SPWE6K4"
+    };
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    // Sign In Function
+    function signIn() {
+      const email = document.getElementById("phone").value.trim(); // Treat phone field as email
+      const password = document.getElementById("password").value.trim();
+
+      auth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+          alert("Login successful!");
+          window.location.href = "home.html"; // Redirect after login
+        })
+        .catch((error) => {
+          alert("Login failed: " + error.message);
+        });
+    }
+  </script>
 </head>
 <body>
   <div class="container">
     <img src="https://i.postimg.cc/3JVLk9dB/E-mesg-logo-1.jpg" class="logo" alt="E-mesg Logo" />
     <h2>Sign In to E-mesg</h2>
-    <input type="tel" id="phone" placeholder="Phone Number" required />
+    <input type="email" id="phone" placeholder="Email Address" required />
     <input type="password" id="password" placeholder="Password" required />
     <button onclick="signIn()">Sign In</button>
-    <a href="forgot.html" class="forgot">Forgot Password?</a> <!-- Updated link -->
+    <a href="#" class="forgot">Forgot Password?</a>
   </div>
-
-  <script>
-    function signIn() {
-      const phone = document.getElementById("phone").value.trim();
-      const password = document.getElementById("password").value.trim();
-
-      // Hardcoded credentials
-      if (phone === "7416237272" && password === "harsha@2006") {
-        window.location.href = "home.html"; // Redirect to home.html after successful login
-      } else {
-        alert("Invalid phone number or password!");
-      }
-    }
-  </script>
 </body>
 </html>

@@ -595,4 +595,156 @@
 
     function loadChatMessages(messagesToLoad) {
       const chatMessagesContainer = document.getElementById('chatMessages');
-      chatMessagesContainer.innerHTML
+      chatMessagesContainer.innerHTML = ''; // Clear previous messages
+
+      messagesToLoad.forEach(msg => {
+        const messageContainer = document.createElement('div');
+        messageContainer.classList.add('message-container');
+        if (msg.type === 'sent') {
+          messageContainer.classList.add('sent');
+        } else {
+          messageContainer.classList.add('received');
+        }
+
+        if (msg.type === 'received') {
+          const avatar = document.createElement('div');
+          avatar.classList.add('message-avatar');
+          avatar.textContent = msg.sender.substring(0, 2).toUpperCase(); // First two letters of sender
+          messageContainer.appendChild(avatar);
+        }
+
+        const messageBubble = document.createElement('div');
+        messageBubble.classList.add('message');
+        messageBubble.textContent = msg.text;
+        messageContainer.appendChild(messageBubble);
+
+        chatMessagesContainer.appendChild(messageContainer);
+      });
+      // Scroll to the bottom of the chat
+      chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+    }
+
+    function goBackToMain() {
+      document.getElementById('chatPage').classList.remove('active');
+      document.getElementById('mainPage').classList.add('active');
+      hideChatMenu(); // Hide menu when going back
+    }
+
+    // Admin Mode Logic
+    const adminToggleBtn = document.getElementById('adminToggleBtn');
+    const chatOptionBtns = document.querySelectorAll('.chat-option-btn');
+    const messageInput = document.getElementById('messageInput');
+    const sendMessageBtn = document.getElementById('sendMessageBtn');
+
+    adminToggleBtn.addEventListener('click', () => {
+      isAdminMode = !isAdminMode;
+      adminToggleBtn.textContent = isAdminMode ? 'Disable Admin Mode' : 'Enable Admin Mode';
+      adminToggleBtn.classList.toggle('active', isAdminMode);
+      updateAdminModeUI();
+    });
+
+    function updateAdminModeUI() {
+      chatOptionBtns.forEach(btn => {
+        if (isAdminMode) {
+          btn.classList.remove('disabled');
+          btn.removeAttribute('disabled');
+        } else {
+          btn.classList.add('disabled');
+          btn.setAttribute('disabled', 'disabled');
+        }
+      });
+
+      if (isAdminMode) {
+        messageInput.removeAttribute('disabled');
+        sendMessageBtn.removeAttribute('disabled');
+      } else {
+        messageInput.setAttribute('disabled', 'disabled');
+        sendMessageBtn.setAttribute('disabled', 'disabled');
+      }
+    }
+
+    // Example for sending a message (only works if Admin Mode is on)
+    sendMessageBtn.addEventListener('click', () => {
+      if (isAdminMode) {
+        const messageText = messageInput.value.trim();
+        if (messageText) {
+          const newMessage = { type: 'sent', text: messageText, sender: 'You', timestamp: new Date() };
+          currentCommunityMessages.push(newMessage); // Add to current messages
+          loadChatMessages(currentCommunityMessages); // Reload to show new message
+          messageInput.value = ''; // Clear input
+        }
+      } else {
+        alert("Admin Mode is off. You cannot send messages or use chat options.");
+      }
+    });
+
+    // Allow sending messages with Enter key if Admin Mode is on
+    messageInput.addEventListener('keypress', (event) => {
+      if (event.key === 'Enter' && isAdminMode) {
+        sendMessageBtn.click();
+      }
+    });
+
+    // Add alerts for disabled buttons
+    document.querySelectorAll('.chat-option-btn').forEach(btn => {
+        btn.addEventListener('click', (event) => {
+            if (!isAdminMode) {
+                event.preventDefault(); // Stop default action
+                alert("Admin Mode is off. You cannot use this feature.");
+            } else {
+                // In Admin Mode, show a specific alert for the button clicked
+                const buttonTitle = btn.title || btn.id; // Use title attribute or ID for a meaningful message
+                alert(`Admin Mode is ON. '${buttonTitle}' functionality is enabled (but not implemented in this demo).`);
+            }
+        });
+    });
+
+    // --- Dark Mode / Light Mode Toggle ---
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    themeToggleBtn.addEventListener('click', () => {
+      document.body.classList.toggle('light-mode');
+      const isLightMode = document.body.classList.contains('light-mode');
+      if (isLightMode) {
+        themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
+        localStorage.setItem('theme', 'light');
+      } else {
+        themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
+        localStorage.setItem('theme', 'dark');
+      }
+    });
+
+    // --- Three Dots Menu (Chat Page) ---
+    const chatMenuToggle = document.getElementById('chatMenuToggle');
+    const chatMenu = document.getElementById('chatMenu');
+
+    chatMenuToggle.addEventListener('click', (event) => {
+      event.stopPropagation(); // Prevent click from bubbling to document
+      chatMenu.classList.toggle('show');
+    });
+
+    // Hide menu when clicking outside
+    document.addEventListener('click', (event) => {
+      if (!chatMenu.contains(event.target) && !chatMenuToggle.contains(event.target)) {
+        hideChatMenu();
+      }
+    });
+
+    function hideChatMenu() {
+        chatMenu.classList.remove('show');
+    }
+
+    function sortMessages(order) {
+        hideChatMenu(); // Hide menu after selection
+        if (order === 'newest') {
+            currentCommunityMessages.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+        } else if (order === 'oldest') {
+            currentCommunityMessages.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+        }
+        loadChatMessages(currentCommunityMessages); // Reload messages with new order
+        alert(`Messages sorted by ${order}.`);
+    }
+
+  </script>
+</body>
+</html>
+

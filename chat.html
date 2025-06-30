@@ -3,27 +3,62 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>E-mesg - Formal Chat</title>
+  <title>E-mesg</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-    body { background: #ece5dd; transition: background 0.3s, color 0.3s; }
-    .dark body { background: #121212; color: #fff; }
-
-    .app {
-      width: 100%; max-width: 450px; margin: auto;
-      border: 1px solid #ccc; background: white; height: 100vh;
-      display: flex; flex-direction: column;
-      position: relative; /* For modals */
+    /* Global Styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", sans-serif;
+      transition: all 0.3s ease;
     }
-    .dark .app { background: #1e1e1e; color: #fff; }
 
+    body {
+      background: linear-gradient(to right, #6A0DAD, #C78CFF); /* New vibrant purple gradient */
+      color: #fff;
+    }
+
+    /* Dark Mode Body */
+    .dark body {
+      background: #121212; /* Deeper dark background for dark mode */
+      color: #fff;
+    }
+
+    /* App Container */
+    .app
+      width: 100%;
+      max-width: 500px;
+      margin: auto;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      background: #ffffff; /* Light mode app background */
+    }
+
+    /* Dark Mode App Container */
+    .dark .app {
+      background: #1E1E1E; /* Dark mode app background */
+      color: #fff;
+    }
+
+    /* Top Bar */
     .top-bar {
-      background: #075e54; color: white; padding: 10px 16px;
-      display: flex; justify-content: space-between; align-items: center;
-      position: relative;
+      background: #8A2BE2; /* Bright purple for top bar */
+      color: white;
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative; /* For menu dropdown positioning */
     }
 
-    .top-bar h1 { font-size: 20px; }
+    .top-bar h1 {
+      font-size: 20px;
+    }
 
     .dark-toggle {
       font-size: 18px;
@@ -31,683 +66,735 @@
       border: none;
       color: white;
       cursor: pointer;
-      margin-left: 10px;
     }
 
-    .menu-btn { cursor: pointer; font-size: 20px; }
+    .menu-btn {
+      cursor: pointer;
+      font-size: 20px;
+      margin-left: 15px; /* Spacing for dark mode button */
+    }
 
+    /* Menu Dropdown */
     .menu-dropdown {
-      position: absolute; right: 20px; top: 50px;
-      background: white; border: 1px solid #ccc; display: none;
-      flex-direction: column; z-index: 99;
+      position: absolute;
+      right: 10px;
+      top: 55px; /* Adjusted position */
+      background: white;
+      color: #333;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      display: none;
+      flex-direction: column;
+      z-index: 999;
+      min-width: 150px;
     }
-    .dark .menu-dropdown { background: #2b2b2b; color: white; }
+
+    .dark .menu-dropdown {
+      background: #333;
+      color: white;
+    }
 
     .menu-dropdown button {
-      padding: 10px; border: none; background: inherit; text-align: left;
-      width: 150px; cursor: pointer;
+      padding: 10px;
+      border: none;
+      background: inherit;
+      text-align: left;
+      cursor: pointer;
+      color: inherit; /* Inherit text color from parent */
+      border-bottom: 1px solid rgba(0,0,0,0.1); /* Subtle separator */
     }
 
-    .tabs { display: flex; background: #128c7e; color: white; }
+    .dark .menu-dropdown button {
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .menu-dropdown button:last-child {
+        border-bottom: none;
+    }
+
+    .menu-dropdown button:hover {
+        background: #f0f0f0;
+    }
+
+    .dark .menu-dropdown button:hover {
+        background: #444;
+    }
+
+    /* Tabs Navigation */
+    .tabs {
+      display: flex;
+      background: #6A0DAD; /* Main tab background */
+    }
+
     .tab {
-      flex: 1; text-align: center; padding: 10px; cursor: pointer;
+      flex: 1;
+      text-align: center;
+      padding: 12px 10px; /* Increased padding for better tap area */
+      color: white;
+      cursor: pointer;
+      font-weight: 500;
+      opacity: 0.8; /* Slightly less opaque for inactive tabs */
     }
-    .active-tab { background: #075e54; }
 
-    .content { flex: 1; overflow-y: auto; background: #f0f0f0; padding: 10px; }
-    .dark .content { background: #2b2b2b; }
+    .active-tab {
+      background: #8A2BE2; /* Active tab highlight */
+      opacity: 1;
+      border-bottom: 3px solid #FFD700; /* Gold underline for active tab */
+    }
 
-    .chat, .status { display: none; }
-    .chat.active, .status.active { display: block; }
+    /* Content Area */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      background: #F8F8F8; /* Light mode content background */
+      padding: 10px;
+    }
 
+    .dark .content {
+      background: #252525; /* Dark mode content background */
+    }
+
+    /* Tab Content Visibility */
+    .chat, .status, .groups, .calls {
+      display: none;
+      height: 100%; /* Ensure they fill the content area */
+      flex-direction: column; /* For chat window to work with flex */
+    }
+
+    .chat.active, .status.active, .groups.active, .calls.active {
+      display: flex; /* Use flex for active tabs */
+    }
+
+    /* Contact List Item */
     .contact {
-      background: white; padding: 10px; margin-bottom: 8px;
-      border-radius: 5px; display: flex; align-items: center; cursor: pointer;
-    }
-    .dark .contact { background: #3a3a3a; }
-
-    .contact img { width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; }
-
-    .chat-box {
-      background: #dcf8c6; padding: 10px; border-radius: 8px; margin: 5px 0;
-      width: fit-content; max-width: 70%;
-      position: relative; /* For delete button positioning */
-    }
-    .sent { align-self: flex-end; background: #cef; }
-    .dark .chat-box { background: #444; color: white; }
-    .dark .sent { background: #555; }
-
-    .msg-input {
-      display: flex; margin-top: auto; padding: 10px; background: #f5f5f5;
+      background: #fff; /* Light mode contact background */
+      margin-bottom: 8px;
+      padding: 12px 10px; /* Increased padding */
+      display: flex;
       align-items: center;
-    }
-    .dark .msg-input { background: #333; }
-
-    .msg-input input[type="text"] {
-      flex: 1; padding: 10px; border-radius: 20px;
-      border: 1px solid #ccc; background: white;
-    }
-    .dark .msg-input input[type="text"] {
-      background: #222; color: white; border-color: #555;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* Subtle shadow */
     }
 
-    .msg-input button,
-    .msg-input label, /* Style for file input label */
-    .msg-input .tone-switch {
-      margin-left: 8px; background: none; border: none;
-      font-size: 20px; cursor: pointer;
-      color: #075e54; /* Consistent button color */
-    }
-    .dark .msg-input button,
-    .dark .msg-input label,
-    .dark .msg-input .tone-switch {
-        color: #128c7e;
+    .dark .contact {
+      background: #2b2b2b; /* Dark mode contact background */
     }
 
-    .msg-input input[type="file"] {
-        display: none; /* Hide actual file input */
+    .contact:hover {
+        background: #f0f8ff; /* Light hover effect */
     }
 
+    .dark .contact:hover {
+        background: #3a3a3a; /* Dark hover effect */
+    }
+
+    .contact img {
+      width: 48px; /* Slightly larger avatars */
+      height: 48px;
+      border-radius: 50%;
+      margin-right: 12px; /* Increased margin */
+      object-fit: cover; /* Ensure image covers the area */
+    }
+
+    .contact div {
+        flex-grow: 1;
+    }
+
+    .contact b {
+        color: #333;
+    }
+
+    .dark .contact b {
+        color: white;
+    }
+
+    .contact small {
+        color: #777;
+        font-size: 0.85em;
+    }
+    .dark .contact small {
+        color: #bbb;
+    }
+
+
+    /* Chat Bubbles */
+    .chat-box {
+      background: #E0F2F7; /* Light blue-grey for received messages */
+      padding: 10px 14px; /* More padding for readability */
+      border-radius: 18px; /* More rounded corners */
+      margin: 6px 0; /* Increased margin */
+      width: fit-content;
+      max-width: 80%; /* Slightly wider max-width */
+      position: relative;
+      word-wrap: break-word; /* Ensure long words break */
+    }
+
+    .sent {
+      align-self: flex-end;
+      background: #BBDEFB; /* Light blue for sent messages */
+    }
+
+    /* Dark Mode Chat Bubbles */
+    .dark .chat-box {
+      background: #424242; /* Darker grey for received message */
+      color: white;
+    }
+
+    .dark .sent {
+      background: #64B5F6; /* Brighter blue for sent message */
+    }
+
+    /* Chat Seen Status */
+    .seen {
+      font-size: 10px;
+      color: #607D8B; /* Darker blue-grey for seen status */
+      margin-top: 4px; /* More spacing */
+      text-align: right;
+    }
+
+    .dark .seen {
+        color: #B0BEC5;
+    }
+
+    /* Message Input Bar */
+    .msg-input {
+      display: flex;
+      padding: 10px;
+      background: #E0E0E0; /* Light mode input background */
+      align-items: center;
+      gap: 8px;
+      border-top: 1px solid #ccc; /* Separator from chat messages */
+    }
+
+    .dark .msg-input {
+      background: #2C2C2C; /* Dark mode input background */
+      border-top-color: #333;
+    }
+
+    .msg-input input {
+      flex: 1;
+      padding: 12px 18px; /* More padding, rounded */
+      border-radius: 25px;
+      border: none;
+      outline: none;
+      background: #fff;
+      color: #333;
+    }
+
+    .dark .msg-input input {
+        background: #3A3A3A;
+        color: white;
+    }
+
+    .msg-input input::placeholder {
+        color: #999;
+    }
+
+    .dark .msg-input input::placeholder {
+        color: #bbb;
+    }
+
+    .msg-input button {
+      font-size: 22px; /* Larger icons */
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #8A2BE2; /* Icons color - purple */
+      padding: 5px; /* Make icon clickable area larger */
+      border-radius: 50%;
+    }
+
+    .msg-input button:hover {
+        background: rgba(138, 43, 226, 0.1); /* Light hover effect */
+    }
+
+    .dark .msg-input button {
+        color: #A8C0FF; /* Dark mode icon color */
+    }
+
+    .dark .msg-input button:hover {
+        background: rgba(168, 192, 255, 0.1);
+    }
+
+    /* Action Buttons (Not explicitly used in this structure, but kept for future) */
+    .action-buttons {
+      display: flex;
+      justify-content: space-around;
+      padding: 10px;
+      background: #ddd;
+    }
+
+    .dark .action-buttons {
+      background: #222;
+    }
+
+    /* Typing Indicator */
+    .typing {
+      font-size: 12px;
+      font-style: italic;
+      margin-top: 5px;
+      color: #666; /* Light mode typing text */
+      padding: 0 10px 10px; /* Added padding */
+    }
+
+    .dark .typing {
+        color: #bbb; /* Dark mode typing text */
+    }
+
+    /* Status Viewer Overlay */
     .status-viewer {
-      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.85); color: white; justify-content: center;
-      align-items: center; flex-direction: column; z-index: 999;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.95); /* Slightly darker overlay */
+      color: white;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000; /* Higher z-index */
+      padding: 20px;
+    }
+
+    .status-viewer h2 {
+        margin-bottom: 10px;
+        font-size: 24px;
+    }
+
+    .status-viewer #statusContent {
+        font-size: 18px;
+        text-align: center;
+        max-width: 80%;
+        margin-bottom: 20px;
     }
 
     .status-controls {
-      margin-top: 20px; display: flex; gap: 20px;
-    }
-
-    .sort-dialog {
-      position: absolute; top: 100px; right: 20px;
-      background: white; border: 1px solid #ccc;
-      padding: 10px; display: none; z-index: 10;
-    }
-
-    .status-ad { font-style: italic; margin-top: 10px; color: yellow; }
-
-    /* New styles for delete button */
-    .delete-msg-btn {
-      position: absolute;
-      top: -8px; /* Adjust as needed */
-      right: -8px; /* Adjust as needed */
-      background: rgba(255, 0, 0, 0.7);
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      font-size: 12px;
       display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      opacity: 0; /* Hidden by default */
-      transition: opacity 0.2s;
+      gap: 30px; /* More spacing between controls */
+      margin-top: 20px;
     }
 
-    .chat-box:hover .delete-msg-btn {
-      opacity: 1; /* Visible on hover */
-    }
-
-    /* Profile Page styles */
-    .profile-page {
-        display: none; /* Hidden by default */
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: #f0f0f0;
-        color: #333;
-        flex-direction: column;
-        align-items: center;
-        padding-top: 50px;
-        z-index: 100;
-    }
-    .dark .profile-page {
-        background: #2b2b2b;
-        color: #fff;
-    }
-    .profile-page img {
-        width: 120px;
-        height: 120px;
-        border-radius: 50%;
-        margin-bottom: 20px;
-        border: 4px solid #075e54;
-    }
-    .profile-page h2 {
-        font-size: 24px;
-        margin-bottom: 10px;
-    }
-    .profile-page p {
-        font-size: 16px;
-        color: #666;
-    }
-    .dark .profile-page p {
-        color: #aaa;
-    }
-    .profile-back-btn {
-        position: absolute;
-        top: 15px;
-        left: 15px;
+    .status-controls button {
         background: none;
         border: none;
-        font-size: 24px;
+        color: white;
         cursor: pointer;
-        color: #075e54;
-    }
-    .dark .profile-back-btn {
-        color: #128c7e;
+        font-size: 28px; /* Larger icons */
+        opacity: 0.8;
     }
 
-    /* Modal styles */
-    .modal {
-        display: none;
-        position: absolute;
-        z-index: 101;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        width: 80%;
-        max-width: 300px;
-        background-color: white;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        flex-direction: column;
-        gap: 15px;
+    .status-controls button:hover {
+        opacity: 1;
+        transform: scale(1.1);
     }
-    .dark .modal {
-        background-color: #3a3a3a;
-        color: white;
+
+    /* Status Reply Box */
+    .reply-box {
+      display: flex;
+      width: 80%;
+      max-width: 400px;
+      margin-top: 30px; /* More separation */
     }
-    .modal input {
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        width: 100%;
-        background-color: #f9f9f9;
+
+    .reply-box input {
+      flex: 1;
+      padding: 10px 15px;
+      border-radius: 25px;
+      border: none;
+      outline: none;
+      background: rgba(255, 255, 255, 0.3); /* Lighter translucent background */
+      color: white;
     }
-    .dark .modal input {
-        background-color: #222;
-        color: white;
-        border-color: #555;
+
+    .reply-box input::placeholder {
+        color: rgba(255, 255, 255, 0.8);
     }
-    .modal-buttons {
+
+    /* Star Icon for Status */
+    .star-icon {
+      font-size: 28px; /* Larger star icon */
+      cursor: pointer;
+      transition: transform 0.3s ease, color 0.3s ease;
+      color: #ccc; /* Default star color */
+      opacity: 0.8;
+    }
+
+    .star-icon:hover {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    .starred {
+      color: gold;
+      transform: scale(1.2);
+      opacity: 1;
+    }
+
+    /* Chat Window Specific Styles */
+    #chatWindow {
+      flex-grow: 1; /* Make chat messages area fill space */
+      display: flex;
+      flex-direction: column;
+    }
+
+    #chatWindow > div:first-child { /* Chat header */
         display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-    }
-    .modal-buttons .confirm {
-        background-color: #075e54;
+        align-items: center;
+        padding: 10px 16px;
+        background: #6A0DAD; /* Deeper purple for chat header */
         color: white;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        z-index: 1; /* Ensure it stays above messages */
     }
-    .dark .modal-buttons .confirm {
-        background-color: #128c7e;
+
+    .dark #chatWindow > div:first-child {
+        background: #4A148C; /* Even deeper for dark mode */
     }
-    .modal-buttons .cancel {
-        background-color: #ccc;
-        color: #333;
+
+    #chatWindow > div:first-child button {
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+        font-size: 20px;
+        margin-left: 10px;
+        opacity: 0.9;
     }
+
+    #chatWindow > div:first-child button:hover {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    #chatMessages {
+        flex-grow: 1; /* Crucial for scrolling messages */
+        overflow-y: auto;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        scroll-behavior: smooth; /* Smooth scroll for new messages */
+    }
+
+
+    /* Community Chat Specific Styles (Groups Tab) */
+    #groupsTab .contact {
+        background: #F3E5F5; /* Lighter purple for groups in light mode */
+        border-left: 5px solid #7B1FA2; /* A stronger accent purple */
+    }
+
+    .dark #groupsTab .contact {
+        background: #3a3240; /* Darker, muted purple for groups in dark mode */
+        border-left-color: #AA47BC; /* Brighter purple for dark mode accent */
+    }
+
+    #groupList .contact img {
+        border: 2px solid #7B1FA2; /* Border for group avatars */
+    }
+     .dark #groupList .contact img {
+        border-color: #AA47BC;
+    }
+
   </style>
 </head>
 <body>
-<div class="app" id="app">
-  <div class="top-bar">
-    <h1>E-mesg</h1>
-    <button class="dark-toggle" onclick="toggleDark()" id="darkModeBtn">🌙</button>
-    <div class="menu-btn" onclick="toggleMenu()">⋮</div>
-    <div class="menu-dropdown" id="menuDropdown">
-      <button>New Group</button>
-      <button>New Broadcast</button>
-      <button>Linked Devices</button>
-      <button onclick="toggleSortDialog()">Sort</button>
-      <button onclick="toggleDark()">Toggle Dark Mode</button>
-      <button>Settings</button>
-      </div>
-    <div class="sort-dialog" id="sortDialog">
-      <input type="text" placeholder="Search by date/month/year">
-      <button onclick="toggleSortDialog()">Close</button>
-    </div>
-  </div>
-
-  <div class="tabs">
-    <div class="tab active-tab" onclick="switchTab('chat')">Chats</div>
-    <div class="tab" onclick="switchTab('status')">Status</div>
-    <div class="tab">Groups</div>
-    <div class="tab">Calls</div>
-  </div>
-
-  <div class="content">
-    <div class="chat active" id="chatTab">
-      <div id="chatList"></div>
-      <div id="chatWindow" style="display:none;">
-        <div style="display:flex; align-items:center; padding:10px; background:#075e54; color:white;">
-          <button onclick="goBack()" style="font-size:16px; margin-right:10px; background:none; border:none; color:white; cursor:pointer;">🔙</button>
-          <img id="chatProfilePic" src="" style="width:30px; height:30px; border-radius:50%; margin-right:10px; cursor:pointer;" onclick="viewProfile()">
-          <h3 id="chatTitle" style="margin:0; cursor:pointer;" onclick="viewProfile()"></h3>
-          <button onclick="startAudioCall()" style="margin-left:auto; background:none; border:none; color:white; font-size:20px; cursor:pointer;" title="Start Audio Call">📞</button>
-          <button onclick="startMeet()" style="margin-left:10px; background:none; border:none; color:white; font-size:20px; cursor:pointer;" title="Start Video Meet">📹</button>
-          <button onclick="showScheduleModal()" style="margin-left:10px; background:none; border:none; color:white; font-size:20px; cursor:pointer;" title="Schedule Message">🗓️</button> </div>
-        <div id="chatMessages" style="padding:10px; display:flex; flex-direction:column;"></div>
+  <div class="app" id="app">
+    <div class="top-bar">
+      <h1>E-mesg</h1>
+      <button class="dark-toggle" onclick="toggleDark()" id="darkModeBtn">🌙</button>
+      <div class="menu-btn" onclick="toggleMenu()">⋮</div>
+      <div class="menu-dropdown" id="menuDropdown">
+        <button onclick="alert('New group coming soon')">New Group</button>
+        <button onclick="alert('Broadcast feature coming soon')">New Broadcast</button>
+        <button onclick="alert('Linked Devices feature')">Linked Devices</button>
+        <button onclick="toggleDark()">Toggle Dark Mode</button>
+        <button>Settings</button>
       </div>
     </div>
 
-    <div class="status" id="statusTab">
-      <div id="statusList"></div>
+    <div class="tabs">
+      <div class="tab active-tab" onclick="switchTab('chat')">Chats</div>
+      <div class="tab" onclick="switchTab('status')">Status</div>
+      <div class="tab" onclick="switchTab('groups')">Groups</div>
+      <div class="tab" onclick="switchTab('calls')">Calls</div>
     </div>
-  </div>
 
-  <div class="msg-input" id="chatInput" style="display:none;">
-    <input type="text" id="msgBox" placeholder="Type a message" />
-    <button onclick="sendMessage()">➤</button>
-    <button onclick="showEncryptionPasscodeModal()" title="Toggle Encryption">🔒</button>
-    <div class="tone-switch" onclick="toggleTone()" title="Toggle Tone">🤖</div>
-  </div>
-</div>
-
-<div class="status-viewer" id="statusViewer">
-  <div id="statusContent">Viewing Status...</div>
-  <div class="status-ad" id="statusAd" style="display: none;">Ad: Boost your mood with ChaiBot!</div>
-  <div class="status-controls">
-    <button onclick="nextStatus()">Next</button>
-    <button onclick="reactStatus()">⭐</button>
-    <button onclick="replyStatus()">Reply</button>
-    <button onclick="closeStatus()">X</button>
-  </div>
-</div>
-
-<div class="profile-page" id="profilePage">
-    <button class="profile-back-btn" onclick="closeProfile()">🔙</button>
-    <img id="profilePagePic" src="" alt="Profile Picture">
-    <h2 id="profilePageName"></h2>
-    <p>Status: Available</p>
-    <p>Last seen: Online</p>
-    <p>Phone: +91 98765 43210</p>
-</div>
-
-<div id="encryptionPasscodeModal" class="modal">
-    <h3>Encryption Passcode</h3>
-    <p>Enter a passcode to encrypt/decrypt messages. Keep it simple for this demo.</p>
-    <input type="password" id="passcodeBox" placeholder="Enter passcode" />
-    <div class="modal-buttons">
-        <button class="cancel" onclick="closeEncryptionPasscodeModal()">Cancel</button>
-        <button class="confirm" onclick="setEncryptionPasscode()">Set & Toggle</button>
-    </div>
-</div>
-
-<div id="scheduleMessageModal" class="modal">
-    <h3>Schedule Message</h3>
-    <input type="text" id="scheduledMessageBox" placeholder="Message to schedule" />
-    <input type="datetime-local" id="scheduledTimeBox" />
-    <div class="modal-buttons">
-        <button class="cancel" onclick="closeScheduleModal()">Cancel</button>
-        <button class="confirm" onclick="confirmScheduleMessage()">Schedule</button>
-    </div>
-</div>
-
-<script>
-  // Mock data for contacts and chat messages (now stored per contact)
-  const contactsData = {
-    "Radha mam 😊": { img: "https://i.pravatar.cc/40?img=1", messages: [] },
-    "srinu babai ✈️": { img: "https://i.pravatar.cc/40?img=2", messages: [] },
-    "Likith sir 💫": { img: "https://i.pravatar.cc/40?img=3", messages: [] },
-    "Nikhil ❤️‍🔥": { img: "https://i.pravatar.cc/40?img=4", messages: [] },
-    "Mom ❤️": { img: "https://i.pravatar.cc/40?img=5", messages: [] },
-    "Dad 🔥": { img: "https://i.pravatar.cc/40?img=6", messages: [] }
-  };
-
-  const statuses = ["Radha's Temple Visit 🙏", "Likith's Office Setup 🖥️", "AD: Buy 1 Get 1 Free!", "Mom's Recipe 🍲", "Dad's Workout 🏋️"];
-  let currentStatus = 0, statusInterval;
-  let toneFormal = false, encryptionOn = false;
-  let currentChatContact = null;
-  let encryptionPasscode = '';
-
-  function getShiftFromPasscode(passcode) {
-      if (!passcode) return 0;
-      let hash = 0;
-      for (let i = 0; i < passcode.length; i++) {
-          hash = passcode.charCodeAt(i) + ((hash << 5) - hash);
-      }
-      return Math.abs(hash) % 25 + 1;
-  }
-
-  function encryptMessage(text, passcode) {
-    if (!passcode) return text;
-    const shift = getShiftFromPasscode(passcode);
-    return text.split('').map(char => {
-      return String.fromCharCode(char.charCodeAt(0) + shift);
-    }).join('');
-  }
-
-  function decryptMessage(encryptedText, passcode) {
-    if (!passcode) return encryptedText;
-    const shift = getShiftFromPasscode(passcode);
-    if (!encryptedText || typeof encryptedText !== 'string') {
-        return encryptedText;
-    }
-    return encryptedText.split('').map(char => {
-      return String.fromCharCode(char.charCodeAt(0) - shift);
-    }).join('');
-  }
-
-  function populateContacts() {
-    console.log("populateContacts function started.");
-    const chatList = document.getElementById("chatList");
-    const statusList = document.getElementById("statusList");
-    
-    if (!chatList) {
-        console.error("Error: chatList element not found!");
-        return;
-    }
-    if (!statusList) {
-        console.error("Error: statusList element not found!");
-        return;
-    }
-
-    chatList.innerHTML = "";
-    statusList.innerHTML = "";
-
-    Object.keys(contactsData).forEach((name, i) => {
-      const contact = contactsData[name];
-      chatList.innerHTML += `
-        <div class="contact" onclick="openChat('${name}', '${contact.img}')">
-          <img src="${contact.img}">${name}
+    <div class="content">
+      <div class="chat active" id="chatTab">
+        <div id="chatList"></div>
+        <div id="chatWindow" style="display:none;">
+          <div style=""> <button onclick="goBack()">🔙</button>
+            <h3 id="chatTitle" style="margin:0; flex:1;"></h3>
+            <button title="Voice Call">📞</button>
+            <button title="Video Call">🎥</button>
+            <button title="Attach File">📎</button>
+            <button title="More">⋮</button>
+          </div>
+          <div id="chatMessages"></div> <div class="typing" id="typingStatus" style="display:none;">Typing...</div>
         </div>
-      `;
-      statusList.innerHTML += `
-        <div class="contact" onclick="viewStatus(${i})">
-          <img src="${contact.img}">${name}'s Status
-        </div>
-      `;
-    });
-    console.log("populateContacts function finished. Contacts added:", Object.keys(contactsData).length);
-  }
+      </div>
 
-  function toggleMenu() {
-    const menu = document.getElementById("menuDropdown");
-    menu.style.display = menu.style.display === "flex" ? "none" : "flex";
-  }
+      <div class="status" id="statusTab">
+        <div id="statusList"></div>
+      </div>
 
-  function toggleSortDialog() {
-    const dialog = document.getElementById("sortDialog");
-    dialog.style.display = dialog.style.display === "block" ? "none" : "block";
-  }
+      <div class="groups" id="groupsTab">
+        <div id="groupList"></div>
+      </div>
 
-  function switchTab(tab) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active-tab'));
-    document.querySelectorAll('.chat, .status').forEach(el => el.classList.remove('active'));
-    if (tab === "chat") {
-      document.querySelector('.tab:nth-child(1)').classList.add('active-tab');
-      document.getElementById('chatTab').classList.add('active');
-      goBack();
-    } else if (tab === "status") {
-      document.querySelector('.tab:nth-child(2)').classList.add('active-tab');
-      document.getElementById('statusTab').classList.add('active');
-    }
-  }
+      <div class="calls" id="callsTab">
+        <div id="callList"></div>
+      </div>
+    </div>
 
-  function openChat(name, img) {
-    currentChatContact = name;
-    document.getElementById("chatList").style.display = "none";
-    document.getElementById("chatWindow").style.display = "block";
-    document.getElementById("chatInput").style.display = "flex";
-    document.getElementById("chatTitle").innerText = name;
-    document.getElementById("chatProfilePic").src = img;
-    updateChatMessages();
-    if (contactsData[currentChatContact].messages.length === 0) {
-      setTimeout(() => simulateIncomingMessage("Hello! How can I assist you today?"), 1500);
-    }
-  }
+    <div class="msg-input" id="chatInput" style="display:none;">
+      <input type="text" id="msgBox" placeholder="Type a message" oninput="showTyping()"/>
+      <button onclick="sendMessage()">🚀</button>
+      <button onclick="scheduleMessage()" title="Schedule Message">⏰</button>
+      <button onclick="toggleTone()" title="Toggle Tone">🤖</button>
+      <button onclick="toggleEncryption()" title="Toggle Encryption">🔒</button>
+    </div>
+  </div>
 
-  function goBack() {
-    currentChatContact = null;
-    document.getElementById("chatList").style.display = "block";
-    document.getElementById("chatWindow").style.display = "none";
-    document.getElementById("chatInput").style.display = "none";
-  }
+  <div class="status-viewer" id="statusViewer">
+    <h2 id="statusName">User's Status</h2>
+    <div id="statusContent">Status Text</div>
+    <div class="status-controls">
+      <button onclick="nextStatus()">⏭️</button>
+      <span class="star-icon" id="starBtn" onclick="toggleStar(this)">⭐</span>
+      <button onclick="replyStatus()">💬</button>
+      <button onclick="closeStatus()">❌</button>
+    </div>
+    <div class="reply-box">
+      <input type="text" placeholder="Reply..." />
+    </div>
+  </div>
 
-  function deleteMessage(index) {
-    if (currentChatContact && confirm("Are you sure you want to delete this message?")) {
-      contactsData[currentChatContact].messages.splice(index, 1);
-      updateChatMessages();
-    }
-  }
-
-  function sendMessage() {
-    const input = document.getElementById("msgBox");
-    if (!input.value.trim() || !currentChatContact) return;
-
-    let messageText = input.value;
-    if (toneFormal) messageText = "[Formal] " + messageText;
-    
-    let isEncrypted = encryptionOn;
-    let storedText = messageText; 
-    if (isEncrypted) {
-        if (!encryptionPasscode) {
-            alert("Please set an encryption passcode first to send encrypted messages.");
-            showEncryptionPasscodeModal();
-            return;
-        }
-        storedText = encryptMessage(messageText, encryptionPasscode);
-    }
-
-    contactsData[currentChatContact].messages.push({ 
-        type: 'text',
-        content: storedText, 
-        sent: true, 
-        encrypted: isEncrypted, 
-        passcodeUsed: isEncrypted ? encryptionPasscode : ''
-    });
-    input.value = '';
-    updateChatMessages();
-    scrollToBottom("chatMessages");
-
-    setTimeout(simulateIncomingMessage, 1500);
-  }
-
-  function simulateIncomingMessage(text = null) {
-    if (!currentChatContact) return;
-    const incomingMessages = [
-        "Thank you for your message.",
-        "Understood. I will process this request.",
-        "Please provide further details.",
-        "Acknowledged. I will respond shortly.",
-        "Received. Let's proceed."
+  <script>
+    const contacts = ["Radha mam 😊", "Likith sir 💫", "Nikhil ❤️‍🔥", "Mom ❤️", "Dad 🔥"];
+    const groups = ["AI Team 🔬", "Coders 🚀", "Friends 😎", "Hackathon 🛠️", "Family ❤️", "Dev Squad 👨‍💻", "Foodies 🍔", "Sports Fans ⚽", "Photography 📷", "E-mesg Testers 💡"];
+    const calls = [
+      { name: "Radha mam", time: "10:45 AM", type: "📞" },
+      { name: "Nikhil", time: "Yesterday", type: "🎥" },
+      { name: "Mom", time: "2 days ago", type: "📞" },
     ];
-    let incomingText = text || incomingMessages[Math.floor(Math.random() * incomingMessages.length)];
+    const statuses = ["Radha: Temple Visit 🙏", "Likith: Office Setup 🖥️", "Mom: Recipe 🍲", "AD: Buy 1 Get 1!", "Dad: Workout 🏋️"];
+    const statusNames = ["Radha mam", "Likith sir", "Mom", "Promo", "Dad"];
 
-    let isEncrypted = encryptionOn;
-    let storedText = incomingText;
-    if (isEncrypted) {
-        storedText = encryptMessage(incomingText, "formalchatkey"); 
+    let currentStatus = 0;
+    let currentTone = 'casual'; // Can be 'casual', 'formal', 'humorous'
+    let encryptionOn = false;
+    let chatMessages = [];
+    let typingTimeout;
+
+    function populateContacts() {
+      const chat = document.getElementById("chatList");
+      const status = document.getElementById("statusList");
+      const group = document.getElementById("groupList");
+      const call = document.getElementById("callList");
+      chat.innerHTML = status.innerHTML = group.innerHTML = call.innerHTML = "";
+
+      // Populate Chat List
+      contacts.forEach((name, i) => {
+        chat.innerHTML += `<div class="contact" onclick="openChat('${name}')">
+          <img src="https://i.pravatar.cc/40?img=${i+1}" alt="Profile picture" />
+          <div><b>${name}</b><br><small>Last message preview...</small></div>
+        </div>`;
+      });
+
+      // Populate Status List
+      contacts.forEach((name, i) => {
+        status.innerHTML += `<div class="contact" onclick="viewStatus(${i})">
+          <img src="https://i.pravatar.cc/40?img=${i+1}" alt="Status picture" />
+          <div><b>${name}'s Status</b><br><small>Tap to view status update</small></div>
+        </div>`;
+      });
+
+      // Populate Group List
+      groups.forEach((g, i) => {
+        group.innerHTML += `<div class="contact">
+          <img src="https://i.pravatar.cc/40?img=${i+6}" alt="Group icon" />
+          <div><b>${g}</b><br><small>Community updates...</small></div>
+        </div>`;
+      });
+
+      // Populate Call List
+      calls.forEach(c => {
+        call.innerHTML += `<div class="contact">
+          <img src="https://i.pravatar.cc/40?u=${c.name}" alt="Caller picture" />
+          <div><b>${c.name}</b><br><small>${c.type} ${c.time}</small></div>
+        </div>`;
+      });
     }
 
-    contactsData[currentChatContact].messages.push({ 
-        type: 'text',
-        content: storedText, 
-        sent: false, 
-        encrypted: isEncrypted,
-        passcodeUsed: isEncrypted ? "formalchatkey" : ''
-    });
-    updateChatMessages();
-    scrollToBottom("chatMessages");
-  }
-
-  function updateChatMessages() {
-    const msgBox = document.getElementById("chatMessages");
-    if (!currentChatContact) {
-        msgBox.innerHTML = "";
-        return;
-    }
-    msgBox.innerHTML = contactsData[currentChatContact].messages.map((msg, index) => {
-      let displayText = msg.content;
-      if (msg.encrypted) {
-          displayText = decryptMessage(msg.content, msg.passcodeUsed || encryptionPasscode);
-          if (displayText === msg.content) {
-              displayText = "🔒 Encrypted Message (Enter passcode to view)";
-          }
-      }
-
-      let messageHtml = '';
-      if (msg.type === 'text') {
-        messageHtml = displayText;
-      } else if (msg.type === 'file') {
-        messageHtml = `📎 <a href="${msg.content}" target="_blank" style="color: inherit;">${msg.fileName}</a>`;
-      } else if (msg.type === 'scheduled') {
-        messageHtml = `⏱️ Scheduled: "${displayText}" (Sent at: ${new Date(msg.scheduledTime).toLocaleTimeString()})`;
-      }
-      
-      return `
-        <div class="chat-box ${msg.sent ? 'sent' : ''}">
-          ${messageHtml}
-          <button class="delete-msg-btn" onclick="deleteMessage(${index})">x</button>
-        </div>
-      `;
-    }).join('');
-  }
-
-  function scrollToBottom(elementId) {
-    const element = document.getElementById(elementId);
-    element.scrollTop = element.scrollHeight;
-  }
-
-  function toggleTone() {
-    toneFormal = !toneFormal;
-    alert("Tone set to " + (toneFormal ? "Formal" : "Informal"));
-  }
-
-  function showEncryptionPasscodeModal() {
-      document.getElementById('encryptionPasscodeModal').style.display = 'flex';
-      document.getElementById('passcodeBox').value = encryptionPasscode;
-  }
-
-  function closeEncryptionPasscodeModal() {
-      document.getElementById('encryptionPasscodeModal').style.display = 'none';
-  }
-
-  function setEncryptionPasscode() {
-      const passcode = document.getElementById('passcodeBox').value;
-      if (passcode.length < 3) {
-          alert("Passcode should be at least 3 characters for this demo.");
-          return;
-      }
-      encryptionPasscode = passcode;
-      encryptionOn = !encryptionOn;
-      alert("Encryption is now " + (encryptionOn ? "ON" : "OFF") + " with your passcode.");
-      closeEncryptionPasscodeModal();
+    function openChat(name) {
+      document.getElementById("chatTitle").innerText = name;
+      document.getElementById("chatList").style.display = "none";
+      document.getElementById("chatWindow").style.display = "flex"; // Changed to flex for message column
+      document.getElementById("chatInput").style.display = "flex";
+      // Clear previous messages for new chat (in a real app, you'd load specific chat history)
+      chatMessages = [];
       updateChatMessages();
-  }
+    }
 
-  function startMeet() {
-      alert("Simulating: Starting a video meeting for E-mesg. (Full feature requires WebRTC)");
-  }
+    function goBack() {
+      document.getElementById("chatWindow").style.display = "none";
+      document.getElementById("chatInput").style.display = "none";
+      document.getElementById("chatList").style.display = "block";
+    }
 
-  function startAudioCall() {
-      alert("Simulating: Starting an audio call for E-mesg. (Full feature requires WebRTC)");
-  }
+    function sendMessage(scheduledText = null) {
+      const input = document.getElementById("msgBox");
+      let text = scheduledText !== null ? scheduledText : input.value;
 
-  function showScheduleModal() {
-      document.getElementById('scheduleMessageModal').style.display = 'flex';
-      document.getElementById('scheduledMessageBox').value = '';
-      const now = new Date();
-      now.setMinutes(now.getMinutes() + 5);
-      const isoDateTime = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
-      document.getElementById('scheduledTimeBox').value = isoDateTime;
-  }
+      if (!text.trim()) return;
 
-  function closeScheduleModal() {
-      document.getElementById('scheduleMessageModal').style.display = 'none';
-  }
-
-  function confirmScheduleMessage() {
-      const scheduledMessage = document.getElementById('scheduledMessageBox').value;
-      const scheduledTime = new Date(document.getElementById('scheduledTimeBox').value);
-
-      if (!scheduledMessage.trim() || isNaN(scheduledTime.getTime())) {
-          alert("Please enter a message and a valid time.");
-          return;
-      }
-      if (scheduledTime <= new Date()) {
-          alert("Scheduled time must be in the future.");
-          return;
+      const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      
+      // Apply tone based on currentTone
+      if (currentTone === 'formal') {
+        text = "[Formal] " + text;
+      } else if (currentTone === 'humorous') {
+        text = "[Humorous] " + text + " 😄";
       }
 
-      alert(`Message "${scheduledMessage}" scheduled for ${scheduledTime.toLocaleString()}. (This is a simulation.)`);
-      closeScheduleModal();
-
-      const delay = scheduledTime.getTime() - new Date().getTime();
-      if (delay > 0) {
-          setTimeout(() => {
-              if (currentChatContact) {
-                  contactsData[currentChatContact].messages.push({
-                      type: 'scheduled',
-                      content: scheduledMessage,
-                      sent: true,
-                      encrypted: false,
-                      scheduledTime: scheduledTime.toISOString()
-                  });
-                  updateChatMessages();
-                  scrollToBottom("chatMessages");
-                  simulateIncomingMessage(`Confirmation: Your scheduled message "${scheduledMessage}" was sent.`);
-              }
-          }, delay);
+      if (encryptionOn) text = btoa(text); // Base64 encode for demo
+      chatMessages.push({ text, sent: true, time });
+      if (scheduledText === null) { // Only clear input if not a scheduled message being processed
+        input.value = '';
       }
-  }
+      updateChatMessages();
+      // Scroll to bottom after sending message
+      const chatMessagesContainer = document.getElementById("chatMessages");
+      chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+    }
 
+    function scheduleMessage() {
+      const input = document.getElementById("msgBox");
+      if (!input.value.trim()) {
+        alert("Please type a message to schedule.");
+        return;
+      }
 
-  function viewStatus(index) {
-    currentStatus = index % statuses.length;
-    document.getElementById("statusViewer").style.display = "flex";
-    updateStatus();
-    clearInterval(statusInterval);
-    statusInterval = setInterval(nextStatus, 10000);
-  }
+      const messageToSchedule = input.value;
+      const delay = prompt("Schedule message in how many seconds?");
+      if (delay === null || isNaN(delay) || delay <= 0) {
+        alert("Invalid delay. Message not scheduled.");
+        return;
+      }
 
-  function updateStatus() {
-    const text = statuses[currentStatus];
-    document.getElementById("statusContent").innerText = text;
-    document.getElementById("statusAd").style.display = text.startsWith("AD:") ? "block" : "none";
-  }
+      alert(`Message "${messageToSchedule}" scheduled for ${delay} seconds from now.`);
+      input.value = ''; // Clear input immediately after scheduling
 
-  function nextStatus() {
-    currentStatus = (currentStatus + 1) % statuses.length;
-    updateStatus();
-  }
+      setTimeout(() => {
+        sendMessage(messageToSchedule); // Send the message after the delay
+        alert(`Scheduled message sent: "${messageToSchedule}"`);
+      }, delay * 1000);
+    }
 
-  function reactStatus() { alert("You reacted ⭐ to this status."); }
-  function replyStatus() { alert("Reply feature coming soon!"); }
-  function closeStatus() {
-    clearInterval(statusInterval);
-    document.getElementById("statusViewer").style.display = "none";
-  }
+    function updateChatMessages() {
+      const box = document.getElementById("chatMessages");
+      box.innerHTML = chatMessages.map(m => {
+        let display = encryptionOn ? atob(m.text) : m.text; // Base64 decode for demo
+        return `<div class="chat-box ${m.sent ? 'sent' : ''}">
+                  ${display}
+                                    <div class="seen">✔✔ ${m.time}</div
+                  </div>`;
+      }).join('');
+    }
 
-  function toggleDark() {
-    const isDark = document.body.classList.toggle("dark");
-    document.querySelector(".app").classList.toggle("dark");
+    function showTyping() {
+      clearTimeout(typingTimeout);
+      document.getElementById("typingStatus").style.display = "block";
+      typingTimeout = setTimeout(() => {
+        document.getElementById("typingStatus").style.display = "none";
+      }, 1500);
+    }
 
-    const icon = document.getElementById("darkModeBtn");
-    icon.textContent = isDark ? "☀️" : "🌙";
-  }
+    function toggleTone() {
+      const tones = ['casual', 'formal', 'humorous'];
+      let currentIndex = tones.indexOf(currentTone);
+      currentTone = tones[(currentIndex + 1) % tones.length];
+      alert("Tone: " + currentTone.charAt(0).toUpperCase() + currentTone.slice(1));
+    }
 
-  function viewProfile() {
-    if (!currentChatContact) return;
-    const contactInfo = contactsData[currentChatContact];
+    function toggleEncryption() {
+      encryptionOn = !encryptionOn;
+      alert("Encryption: " + (encryptionOn ? "ON" : "OFF"));
+      updateChatMessages(); // Re-render messages to show encrypted/decrypted state
+    }
 
-    document.getElementById("profilePagePic").src = contactInfo.img;
-    document.getElementById("profilePageName").innerText = currentChatContact;
-    document.getElementById("profilePage").style.display = "flex";
-    document.getElementById("app").style.display = "none";
-  }
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active-tab'));
+      document.querySelectorAll('.chat, .status, .groups, .calls').forEach(el => el.classList.remove('active'));
+      document.getElementById("chatInput").style.display = "none"; // Hide input when switching tabs
+      document.getElementById("chatWindow").style.display = "none"; // Hide chat window when switching tabs
+      document.getElementById("chatList").style.display = "block"; // Show chat list when going to chat tab
 
-  function closeProfile() {
-    document.getElementById("profilePage").style.display = "none";
-    document.getElementById("app").style.display = "flex";
-  }
+      if (tab === "chat") {
+        document.querySelector('.tab:nth-child(1)').classList.add('active-tab');
+        document.getElementById('chatTab').classList.add('active');
+      } else if (tab === "status") {
+        document.querySelector('.tab:nth-child(2)').classList.add('active-tab');
+        document.getElementById('statusTab').classList.add('active');
+      } else if (tab === "groups") {
+        document.querySelector('.tab:nth-child(3)').classList.add('active-tab');
+        document.getElementById('groupsTab').classList.add('active');
+      } else if (tab === "calls") {
+        document.querySelector('.tab:nth-child(4)').classList.add('active-tab');
+        document.getElementById('callsTab').classList.add('active');
+      }
+    }
 
+    function viewStatus(index) {
+      currentStatus = index % statuses.length;
+      document.getElementById("statusViewer").style.display = "flex";
+      document.getElementById("statusContent").innerText = statuses[currentStatus];
+      document.getElementById("statusName").innerText = statusNames[currentStatus];
+      // Reset star state when viewing new status
+      document.getElementById("starBtn").classList.remove("starred");
+    }
 
-  window.onload = populateContacts;
-</script>
+    function nextStatus() {
+      currentStatus = (currentStatus + 1) % statuses.length;
+      viewStatus(currentStatus);
+    }
+
+    function closeStatus() {
+      document.getElementById("statusViewer").style.display = "none";
+    }
+
+    function replyStatus() {
+      const replyInput = document.querySelector(".reply-box input");
+      if(replyInput.value.trim()) {
+        alert("Reply sent: " + replyInput.value);
+        replyInput.value = ''; // Clear input after sending
+      } else {
+        alert("Please type a reply.");
+      }
+    }
+
+    function toggleStar(el) {
+      el.classList.toggle("starred");
+    }
+
+    function toggleMenu() {
+      const menu = document.getElementById("menuDropdown");
+      menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+    }
+
+    function toggleDark() {
+      const isDark = document.body.classList.toggle("dark");
+      document.querySelector(".app").classList.toggle("dark");
+      document.getElementById("darkModeBtn").textContent = isDark ? "☀️" : "🌙";
+      // Update chat messages to reflect encryption/decryption toggle in dark mode
+      updateChatMessages();
+    }
+
+    // Initial population on window load
+    window.onload = populateContacts;
+  </script>
 </body>
 </html>
+
+                  
+                  

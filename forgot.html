@@ -8,21 +8,26 @@
   <style>
     body {
       font-family: "Segoe UI", sans-serif;
-      background-color: #f1f1f1;
+      background: linear-gradient(135deg, #4b0082, #6a0dad);
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
       margin: 0;
+      overflow: hidden;
+      position: relative;
     }
     .container {
-      background-color: white;
+      background-color: rgba(40, 0, 80, 0.85);
       padding: 30px;
       border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      box-shadow: 0 0 30px rgba(0,0,0,0.4);
       width: 90%;
       max-width: 400px;
       text-align: center;
+      color: white;
+      z-index: 1;
+      backdrop-filter: blur(10px);
     }
     h2 {
       margin-bottom: 20px;
@@ -32,32 +37,58 @@
       padding: 12px;
       margin: 10px 0;
       border-radius: 8px;
-      border: 1px solid #ccc;
+      border: none;
+      font-size: 1em;
     }
     button {
       padding: 12px;
       width: 100%;
       border: none;
       border-radius: 8px;
-      background-color: #007bff;
+      background-color: #6a0dad;
       color: white;
       font-size: 16px;
       cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    button:hover {
+      transform: scale(1.05);
     }
     .message {
       margin-top: 20px;
       font-size: 1em;
-      color: green;
+      color: #00ffcc;
     }
     a.back {
       display: inline-block;
       margin-top: 20px;
-      color: #007bff;
+      color: #f0f0f0;
       text-decoration: none;
       font-size: 0.9em;
     }
     a.back:hover {
       text-decoration: underline;
+    }
+    .floating-symbol {
+      position: absolute;
+      font-size: 2rem;
+      opacity: 0.4;
+      animation: float 10s linear infinite;
+      color: white;
+      pointer-events: none;
+    }
+    @keyframes float {
+      0% {
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 0;
+      }
+      50% {
+        opacity: 0.6;
+      }
+      100% {
+        transform: translateY(-120vh) rotate(360deg);
+        opacity: 0;
+      }
     }
   </style>
 </head>
@@ -80,8 +111,18 @@
         return;
       }
 
-      // Simulate sending reset link
       messageEl.textContent = `If the phone number ${phone} is registered, a password reset link has been sent.`;
+    }
+
+    // Generate floating question marks
+    for (let i = 0; i < 20; i++) {
+      const symbol = document.createElement("div");
+      symbol.classList.add("floating-symbol");
+      symbol.textContent = "❓";
+      symbol.style.left = Math.random() * 100 + "vw";
+      symbol.style.animationDuration = (5 + Math.random() * 5) + "s";
+      symbol.style.fontSize = (20 + Math.random() * 30) + "px";
+      document.body.appendChild(symbol);
     }
   </script>
 </body>

@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -26,7 +27,7 @@
     }
 
     /* App Container */
-    .app
+    .app {
       width: 100%;
       max-width: 500px;
       margin: auto;
@@ -494,6 +495,113 @@
         border-color: #AA47BC;
     }
 
+    /* Message Sorting Dialog Styles */
+    .sort-dialog-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1001; /* Above status viewer */
+    }
+
+    .sort-dialog-box {
+        background: #fff;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        width: 80%;
+        max-width: 350px;
+        color: #333;
+    }
+
+    .dark .sort-dialog-box {
+        background: #3a3a3a;
+        color: white;
+    }
+
+    .sort-dialog-box h3 {
+        margin-bottom: 5px;
+        font-size: 1.2em;
+        text-align: center;
+    }
+
+    .sort-dialog-box input {
+        padding: 10px 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 1em;
+        outline: none;
+        width: 100%;
+        box-sizing: border-box; /* Include padding in width */
+    }
+
+    .dark .sort-dialog-box input {
+        background: #4c4c4c;
+        border-color: #555;
+        color: white;
+    }
+
+    .sort-dialog-box input::placeholder {
+        color: #999;
+    }
+    .dark .sort-dialog-box input::placeholder {
+        color: #bbb;
+    }
+
+
+    .sort-dialog-actions {
+        display: flex;
+        justify-content: space-around;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .sort-dialog-actions button {
+        flex: 1;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1em;
+        font-weight: 600;
+        transition: background 0.2s ease;
+    }
+
+    .sort-dialog-actions button.apply {
+        background: #8A2BE2;
+        color: white;
+    }
+
+    .sort-dialog-actions button.apply:hover {
+        background: #6A0DAD;
+    }
+
+    .sort-dialog-actions button.cancel {
+        background: #E0E0E0;
+        color: #333;
+    }
+
+    .dark .sort-dialog-actions button.cancel {
+        background: #555;
+        color: white;
+    }
+
+    .sort-dialog-actions button.cancel:hover {
+        background: #ccc;
+    }
+
+    .dark .sort-dialog-actions button.cancel:hover {
+        background: #666;
+    }
+
   </style>
 </head>
 <body>
@@ -527,6 +635,7 @@
             <button title="Voice Call">📞</button>
             <button title="Video Call">🎥</button>
             <button title="Attach File">📎</button>
+            <button title="Sort Messages" onclick="showSortDialog()">📅</button>
             <button title="More">⋮</button>
           </div>
           <div id="chatMessages"></div> <div class="typing" id="typingStatus" style="display:none;">Typing...</div>
@@ -569,7 +678,19 @@
     </div>
   </div>
 
+  <div class="sort-dialog-overlay" id="sortDialogOverlay" style="display: none;">
+    <div class="sort-dialog-box">
+      <h3>Sort Messages</h3>
+      <input type="text" id="sortInput" placeholder="Enter day, month, or year (e.g., '20', 'June', '2025')"/>
+      <div class="sort-dialog-actions">
+        <button class="apply" onclick="applySort()">Apply</button>
+        <button class="cancel" onclick="closeSortDialog()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <script>
+    // Initial data for contacts, groups, calls, statuses
     const contacts = ["Radha mam 😊", "Likith sir 💫", "Nikhil ❤️‍🔥", "Mom ❤️", "Dad 🔥"];
     const groups = ["AI Team 🔬", "Coders 🚀", "Friends 😎", "Hackathon 🛠️", "Family ❤️", "Dev Squad 👨‍💻", "Foodies 🍔", "Sports Fans ⚽", "Photography 📷", "E-mesg Testers 💡"];
     const calls = [
@@ -580,12 +701,23 @@
     const statuses = ["Radha: Temple Visit 🙏", "Likith: Office Setup 🖥️", "Mom: Recipe 🍲", "AD: Buy 1 Get 1!", "Dad: Workout 🏋️"];
     const statusNames = ["Radha mam", "Likith sir", "Mom", "Promo", "Dad"];
 
+    // Global state variables
     let currentStatus = 0;
     let currentTone = 'casual'; // Can be 'casual', 'formal', 'humorous'
     let encryptionOn = false;
-    let chatMessages = [];
+    let chatMessages = []; // This will store all messages for the active chat
+    let originalChatMessages = []; // To store a copy for reverting sorting
     let typingTimeout;
 
+    // Helper to get current time for messages
+    function getCurrentTime() {
+      const now = new Date();
+      // Format: "Month DD, YYYY HH:MM AM/PM" for better sorting demonstration
+      const options = { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true };
+      return now.toLocaleDateString('en-US', options).replace(',', '') + ' ' + now.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'});
+    }
+
+    // Function to populate contact lists (chats, status, groups, calls)
     function populateContacts() {
       const chat = document.getElementById("chatList");
       const status = document.getElementById("statusList");
@@ -593,7 +725,6 @@
       const call = document.getElementById("callList");
       chat.innerHTML = status.innerHTML = group.innerHTML = call.innerHTML = "";
 
-      // Populate Chat List
       contacts.forEach((name, i) => {
         chat.innerHTML += `<div class="contact" onclick="openChat('${name}')">
           <img src="https://i.pravatar.cc/40?img=${i+1}" alt="Profile picture" />
@@ -601,15 +732,13 @@
         </div>`;
       });
 
-      // Populate Status List
       contacts.forEach((name, i) => {
         status.innerHTML += `<div class="contact" onclick="viewStatus(${i})">
           <img src="https://i.pravatar.cc/40?img=${i+1}" alt="Status picture" />
-          <div><b>${name}'s Status</b><br><small>Tap to view status update</small></div>
+           <div><b>${name}'s Status</b><br><small>Tap to view status update</small></div>
         </div>`;
       });
 
-      // Populate Group List
       groups.forEach((g, i) => {
         group.innerHTML += `<div class="contact">
           <img src="https://i.pravatar.cc/40?img=${i+6}" alt="Group icon" />
@@ -617,7 +746,6 @@
         </div>`;
       });
 
-      // Populate Call List
       calls.forEach(c => {
         call.innerHTML += `<div class="contact">
           <img src="https://i.pravatar.cc/40?u=${c.name}" alt="Caller picture" />
@@ -626,29 +754,48 @@
       });
     }
 
+    // Function to open a specific chat window
     function openChat(name) {
       document.getElementById("chatTitle").innerText = name;
       document.getElementById("chatList").style.display = "none";
-      document.getElementById("chatWindow").style.display = "flex"; // Changed to flex for message column
+      document.getElementById("chatWindow").style.display = "flex";
       document.getElementById("chatInput").style.display = "flex";
-      // Clear previous messages for new chat (in a real app, you'd load specific chat history)
-      chatMessages = [];
+      
+      // Simulate loading past messages for a chat. In a real app, this would fetch from a database.
+      // For demonstration, let's add some dummy messages with different dates
+      originalChatMessages = [
+        { text: "Hey there!", sent: false, time: "Jun 28, 2025 09:30 AM" },
+        { text: "How are you?", sent: true, time: "Jun 28, 2025 09:31 AM" },
+        { text: "I'm good, thanks! What about you?", sent: false, time: "Jun 28, 2025 09:32 AM" },
+        { text: "Just chilling. Planning for July events.", sent: true, time: "Jun 28, 2025 09:35 AM" },
+        { text: "Did you hear about the meeting on July 15, 2025?", sent: false, time: "Jun 29, 2025 11:00 AM" },
+        { text: "Yeah, I added it to my calendar for July.", sent: true, time: "Jun 29, 2025 11:05 AM" },
+        { text: "Remember that project deadline in 2025?", sent: false, time: "Jan 10, 2025 03:00 PM" },
+        { text: "Oh, right! That was a while ago in 2025.", sent: true, time: "Jan 10, 2025 03:05 PM" },
+        { text: "Let's catch up on the 20th.", sent: false, time: "Jun 20, 2025 05:00 PM" },
+        { text: "Sounds good for the 20th!", sent: true, time: "Jun 20, 2025 05:01 PM" },
+      ];
+      chatMessages = [...originalChatMessages]; // Copy for active display
       updateChatMessages();
     }
 
+    // Function to go back from chat window to chat list
     function goBack() {
       document.getElementById("chatWindow").style.display = "none";
       document.getElementById("chatInput").style.display = "none";
       document.getElementById("chatList").style.display = "block";
+      chatMessages = [...originalChatMessages]; // Reset messages if user goes back
+      updateChatMessages();
     }
 
+    // Function to send a message
     function sendMessage(scheduledText = null) {
       const input = document.getElementById("msgBox");
       let text = scheduledText !== null ? scheduledText : input.value;
 
       if (!text.trim()) return;
 
-      const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      const time = getCurrentTime(); // Use the new helper for time
       
       // Apply tone based on currentTone
       if (currentTone === 'formal') {
@@ -659,15 +806,17 @@
 
       if (encryptionOn) text = btoa(text); // Base64 encode for demo
       chatMessages.push({ text, sent: true, time });
+      originalChatMessages.push({ text, sent: true, time }); // Add to original for full history
+      
       if (scheduledText === null) { // Only clear input if not a scheduled message being processed
         input.value = '';
       }
       updateChatMessages();
-      // Scroll to bottom after sending message
       const chatMessagesContainer = document.getElementById("chatMessages");
       chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
     }
 
+    // Function to schedule a message
     function scheduleMessage() {
       const input = document.getElementById("msgBox");
       if (!input.value.trim()) {
@@ -691,17 +840,19 @@
       }, delay * 1000);
     }
 
+    // Function to update chat messages display
     function updateChatMessages() {
       const box = document.getElementById("chatMessages");
       box.innerHTML = chatMessages.map(m => {
         let display = encryptionOn ? atob(m.text) : m.text; // Base64 decode for demo
         return `<div class="chat-box ${m.sent ? 'sent' : ''}">
                   ${display}
-                                    <div class="seen">✔✔ ${m.time}</div
-                  </div>`;
+                  <div class="seen">✔✔ ${m.time}</div>
+                </div>`;
       }).join('');
     }
 
+    // Function to show typing indicator
     function showTyping() {
       clearTimeout(typingTimeout);
       document.getElementById("typingStatus").style.display = "block";
@@ -710,6 +861,7 @@
       }, 1500);
     }
 
+    // Function to toggle message tone
     function toggleTone() {
       const tones = ['casual', 'formal', 'humorous'];
       let currentIndex = tones.indexOf(currentTone);
@@ -717,12 +869,14 @@
       alert("Tone: " + currentTone.charAt(0).toUpperCase() + currentTone.slice(1));
     }
 
+    // Function to toggle message encryption
     function toggleEncryption() {
       encryptionOn = !encryptionOn;
       alert("Encryption: " + (encryptionOn ? "ON" : "OFF"));
       updateChatMessages(); // Re-render messages to show encrypted/decrypted state
     }
 
+    // Function to switch between tabs
     function switchTab(tab) {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active-tab'));
       document.querySelectorAll('.chat, .status, .groups, .calls').forEach(el => el.classList.remove('active'));
@@ -745,12 +899,12 @@
       }
     }
 
+    // Functions for Status Viewer
     function viewStatus(index) {
       currentStatus = index % statuses.length;
       document.getElementById("statusViewer").style.display = "flex";
       document.getElementById("statusContent").innerText = statuses[currentStatus];
       document.getElementById("statusName").innerText = statusNames[currentStatus];
-      // Reset star state when viewing new status
       document.getElementById("starBtn").classList.remove("starred");
     }
 
@@ -767,7 +921,7 @@
       const replyInput = document.querySelector(".reply-box input");
       if(replyInput.value.trim()) {
         alert("Reply sent: " + replyInput.value);
-        replyInput.value = ''; // Clear input after sending
+        replyInput.value = '';
       } else {
         alert("Please type a reply.");
       }
@@ -777,18 +931,59 @@
       el.classList.toggle("starred");
     }
 
+    // Functions for Menu Dropdown
     function toggleMenu() {
       const menu = document.getElementById("menuDropdown");
       menu.style.display = menu.style.display === "flex" ? "none" : "flex";
     }
 
+    // Function for Dark Mode
     function toggleDark() {
       const isDark = document.body.classList.toggle("dark");
       document.querySelector(".app").classList.toggle("dark");
       document.getElementById("darkModeBtn").textContent = isDark ? "☀️" : "🌙";
-      // Update chat messages to reflect encryption/decryption toggle in dark mode
       updateChatMessages();
     }
+
+    // --- Message Sorting Dialog Functions ---
+
+    function showSortDialog() {
+        document.getElementById('sortDialogOverlay').style.display = 'flex';
+        document.getElementById('sortInput').value = ''; // Clear previous input
+        document.getElementById('sortInput').focus(); // Focus input field
+    }
+
+    function closeSortDialog() {
+        document.getElementById('sortDialogOverlay').style.display = 'none';
+        chatMessages = [...originalChatMessages]; // Revert to original full message list
+        updateChatMessages();
+    }
+
+    function applySort() {
+        const sortValue = document.getElementById('sortInput').value.trim();
+        if (sortValue === "") {
+            alert("Please enter a day, month, or year to sort by.");
+            return;
+        }
+
+        // Filter messages based on the sort value in either text or time
+        const filteredMessages = originalChatMessages.filter(msg => 
+            (msg.text.toLowerCase().includes(sortValue.toLowerCase())) ||
+            (msg.time.toLowerCase().includes(sortValue.toLowerCase()))
+        );
+
+        if (filteredMessages.length > 0) {
+            chatMessages = filteredMessages;
+            updateChatMessages();
+            alert(`Displaying messages matching "${sortValue}".`);
+        } else {
+            alert(`No messages found matching "${sortValue}". Showing all messages.`);
+            chatMessages = [...originalChatMessages]; // Revert to original if no match
+            updateChatMessages();
+        }
+        closeSortDialog();
+    }
+
 
     // Initial population on window load
     window.onload = populateContacts;
@@ -796,5 +991,3 @@
 </body>
 </html>
 
-                  
-                  

@@ -11,14 +11,68 @@
       background: linear-gradient(to right, #6A0DAD, #C78CFF);
       color: #fff;
     }
-    .app { max-width: 500px; margin: auto; height: 100vh; display: flex; flex-direction: column; background: #fff; }
-    .top-bar { background: #8A2BE2; color: white; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; }
-    .content { flex: 1; overflow-y: auto; background: #f8f8f8; padding: 10px; }
-    .chat-box { background: #E0F2F7; padding: 10px 14px; border-radius: 18px; margin: 6px 0; max-width: 80%; position: relative; }
-    .sent { align-self: flex-end; background: #BBDEFB; }
-    .seen { font-size: 10px; color: #607D8B; text-align: right; margin-top: 4px; }
-    .msg-input { display: flex; padding: 10px; background: #E0E0E0; gap: 8px; }
-    .msg-input input { flex: 1; padding: 12px 18px; border-radius: 25px; border: none; }
+    .app {
+      max-width: 500px;
+      margin: auto;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+    }
+    .top-bar {
+      background: #8A2BE2;
+      color: white;
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      background: #f8f8f8;
+      padding: 10px;
+    }
+    .chat-box {
+      background: #E0F2F7;
+      padding: 10px 14px;
+      border-radius: 18px;
+      margin: 6px 0;
+      max-width: 80%;
+      position: relative;
+      word-wrap: break-word;
+    }
+    .sent {
+      align-self: flex-end;
+      background: #BBDEFB;
+    }
+    .seen {
+      font-size: 10px;
+      color: #607D8B;
+      text-align: right;
+      margin-top: 4px;
+    }
+    .msg-input {
+      display: flex;
+      padding: 10px;
+      background: #E0E0E0;
+      gap: 8px;
+    }
+    .msg-input input {
+      flex: 1;
+      padding: 12px 18px;
+      border-radius: 25px;
+      border: none;
+      outline: none;
+    }
+    .msg-input button {
+      padding: 10px 16px;
+      background: #8A2BE2;
+      color: #fff;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -31,7 +85,7 @@
         <div id="chatMessages" class="chat-messages" style="flex:1; overflow-y:auto;"></div>
         <div class="msg-input">
           <input type="text" id="userInput" placeholder="Type a message..." />
-          <button onclick="sendMessageToDB(document.getElementById('userInput').value, 'You')">Send</button>
+          <button id="sendBtn">Send</button>
         </div>
       </div>
     </div>
@@ -67,6 +121,11 @@
       });
       document.getElementById("userInput").value = "";
     }
+
+    document.getElementById("sendBtn").addEventListener("click", () => {
+      const msg = document.getElementById("userInput").value;
+      sendMessageToDB(msg, "You");
+    });
 
     onChildAdded(chatRef, (snapshot) => {
       const data = snapshot.val();
